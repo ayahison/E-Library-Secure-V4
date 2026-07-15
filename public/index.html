@@ -46,7 +46,6 @@
         scrollbar-width: none;
       }
 
-
       /* Popup notifikasi ringan tanpa library tambahan */
       .app-popup-backdrop {
         background: rgba(15, 23, 42, 0.48);
@@ -66,18 +65,37 @@
         justify-content: center;
         font-size: 1.5rem;
       }
-      .app-popup-success { background: #dcfce7; color: #15803d; }
-      .app-popup-error { background: #fee2e2; color: #b91c1c; }
-      .app-popup-warning { background: #fef3c7; color: #b45309; }
-      .app-popup-info { background: #dbeafe; color: #1d4ed8; }
+      .app-popup-success {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .app-popup-error {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .app-popup-warning {
+        background: #fef3c7;
+        color: #b45309;
+      }
+      .app-popup-info {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
       @keyframes appPopupIn {
-        from { opacity: 0; transform: translateY(10px) scale(0.97); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
       @media (prefers-reduced-motion: reduce) {
-        .app-popup-card { animation: none; }
+        .app-popup-card {
+          animation: none;
+        }
       }
-
     </style>
   </head>
   <body>
@@ -188,7 +206,10 @@
     >
       <a
         href="#"
-        onclick="event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });"
+        onclick="
+          event.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        "
         class="flex flex-col items-center text-primary"
         ><i class="fas fa-home text-lg"></i
         ><span class="text-[10px] mt-1 font-bold">Beranda</span></a
@@ -244,8 +265,7 @@
     <footer class="mt-8 mb-16 md:mb-0 text-center text-xs text-gray-500 p-4">
       <p id="footer-nama">&copy; 2026 E-Library Terpadu.</p>
       <p class="font-semibold text-primary mt-1">
-        Dikembangkan dengan bangga oleh Dinas Arsip dan Perpustakaan Daerah
-        Kabupaten Banyumas
+        Dikembangkan oleh Dinas Arsip dan Perpustakaan Daerah Kabupaten Banyumas
       </p>
     </footer>
 
@@ -388,15 +408,22 @@
     <script>
       "use strict";
 
-
       let appPopupState = null;
 
       function deteksiTipePopup(pesan) {
         const text = String(pesan || "").toLowerCase();
-        if (/gagal|salah|tidak dapat|tidak valid|tidak tersedia|ditolak|error|melebihi|wajib diisi|tidak boleh kosong/.test(text)) {
+        if (
+          /gagal|salah|tidak dapat|tidak valid|tidak tersedia|ditolak|error|melebihi|wajib diisi|tidak boleh kosong/.test(
+            text,
+          )
+        ) {
           return "error";
         }
-        if (/berhasil|selesai|dimulai|diperbarui|ditambahkan|dihapus|diaktifkan|dibatalkan|terkirim|tersimpan/.test(text)) {
+        if (
+          /berhasil|selesai|dimulai|diperbarui|ditambahkan|dihapus|diaktifkan|dibatalkan|terkirim|tersimpan/.test(
+            text,
+          )
+        ) {
           return "success";
         }
         if (/peringatan|pastikan|perhatian|wajib|pilih|lengkapi/.test(text)) {
@@ -465,7 +492,8 @@
 
         const message = document.createElement("p");
         message.id = "app-popup-message";
-        message.className = "mt-2 whitespace-pre-line text-sm leading-6 text-gray-600";
+        message.className =
+          "mt-2 whitespace-pre-line text-sm leading-6 text-gray-600";
 
         const actions = document.createElement("div");
         actions.className = "mt-6 flex justify-center gap-3";
@@ -500,7 +528,11 @@
         document.body.appendChild(overlay);
 
         overlay.addEventListener("click", function (event) {
-          if (event.target === overlay && appPopupState && !appPopupState.confirmation) {
+          if (
+            event.target === overlay &&
+            appPopupState &&
+            !appPopupState.confirmation
+          ) {
             tutupPopupAplikasi(true);
           }
         });
@@ -550,7 +582,8 @@
         const confirmation = Boolean(opts.confirmation);
         cancelButton.classList.toggle("hidden", !confirmation);
         cancelButton.textContent = opts.cancelText || "Batal";
-        confirmButton.textContent = opts.confirmText || (confirmation ? "Lanjutkan" : "Tutup");
+        confirmButton.textContent =
+          opts.confirmText || (confirmation ? "Lanjutkan" : "Tutup");
         confirmButton.className =
           "rounded-lg px-5 py-2 text-sm font-bold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 " +
           (confirmation && opts.danger
@@ -606,7 +639,6 @@
         tampilkanNotifikasi(String(pesan || ""));
       };
 
-
       const BATAS_DIAM_MENIT = 15;
       const BATAS_DIAM_MS = BATAS_DIAM_MENIT * 60 * 1000;
       const KUNCI_TOKEN_SESI = "elibrary_token_sesi";
@@ -629,9 +661,12 @@
       async function panggilApi(action, payload, options) {
         const opts = options || {};
         const controller = new AbortController();
-        const timeout = setTimeout(function () {
-          controller.abort();
-        }, Number(opts.timeoutMs || 25000));
+        const timeout = setTimeout(
+          function () {
+            controller.abort();
+          },
+          Number(opts.timeoutMs || 25000),
+        );
 
         try {
           const response = await fetch(API_ENDPOINT, {
@@ -661,7 +696,9 @@
           return result;
         } catch (error) {
           if (error && error.name === "AbortError") {
-            throw new Error("Permintaan terlalu lama. Periksa koneksi lalu coba lagi.");
+            throw new Error(
+              "Permintaan terlalu lama. Periksa koneksi lalu coba lagi.",
+            );
           }
           throw error;
         } finally {
@@ -670,7 +707,8 @@
       }
 
       function kosongkanElemen(elemen) {
-        while (elemen && elemen.firstChild) elemen.removeChild(elemen.firstChild);
+        while (elemen && elemen.firstChild)
+          elemen.removeChild(elemen.firstChild);
       }
 
       function buatIkon(className) {
@@ -815,9 +853,7 @@
           sessionStorage.getItem(KUNCI_AKTIVITAS_TERAKHIR),
         );
         const active =
-          token &&
-          lastActivity &&
-          Date.now() - lastActivity < BATAS_DIAM_MS;
+          token && lastActivity && Date.now() - lastActivity < BATAS_DIAM_MS;
 
         if (active) {
           document.getElementById("modal-welcome").classList.add("hidden");
@@ -831,11 +867,13 @@
         }
       }
 
-      ["click", "keydown", "scroll", "touchstart"].forEach(function (eventName) {
-        document.addEventListener(eventName, perbaruiAktivitasSesi, {
-          passive: true,
-        });
-      });
+      ["click", "keydown", "scroll", "touchstart"].forEach(
+        function (eventName) {
+          document.addEventListener(eventName, perbaruiAktivitasSesi, {
+            passive: true,
+          });
+        },
+      );
 
       function tutupModal(idModal) {
         const modal = document.getElementById(idModal);
@@ -861,17 +899,28 @@
       }
 
       function terapkanTema(theme) {
-        temaAktif = ["default", "light", "dark"].indexOf(theme) >= 0
-          ? theme
-          : "default";
+        temaAktif =
+          ["default", "light", "dark"].indexOf(theme) >= 0 ? theme : "default";
 
         if (temaAktif === "light") {
-          document.documentElement.style.setProperty("--color-primary", "#1e3a8a");
-          document.documentElement.style.setProperty("--color-accent", "#60a5fa");
+          document.documentElement.style.setProperty(
+            "--color-primary",
+            "#1e3a8a",
+          );
+          document.documentElement.style.setProperty(
+            "--color-accent",
+            "#60a5fa",
+          );
           document.documentElement.style.setProperty("--color-bg", "#ffffff");
         } else if (temaAktif === "dark") {
-          document.documentElement.style.setProperty("--color-primary", "#1f2937");
-          document.documentElement.style.setProperty("--color-accent", "#f59e0b");
+          document.documentElement.style.setProperty(
+            "--color-primary",
+            "#1f2937",
+          );
+          document.documentElement.style.setProperty(
+            "--color-accent",
+            "#f59e0b",
+          );
           document.documentElement.style.setProperty("--color-bg", "#111827");
           document.body.classList.add("text-gray-200");
         }
@@ -882,8 +931,9 @@
         const name = String(settings.Nama_Perpus || "Perpustakaan Digital");
         document.getElementById("nama-perpus-desktop").textContent = name;
         document.getElementById("nama-perpus-mobile").textContent = name;
-        document.getElementById("teks-sambutan").textContent =
-          String(settings.Teks_Sambutan || "Selamat datang.");
+        document.getElementById("teks-sambutan").textContent = String(
+          settings.Teks_Sambutan || "Selamat datang.",
+        );
         document.getElementById("footer-nama").textContent =
           "© 2026 " + name + ".";
         terapkanTema(String(settings.Tema_Warna || "default"));
@@ -959,7 +1009,6 @@
           if (name) slider.appendChild(buatTombolKategori(name, false));
         });
       }
-
 
       function buatKartuBuku(item) {
         const card = document.createElement("article");
@@ -1045,7 +1094,10 @@
           rak.appendChild(buatKartuBuku(item || {}));
         });
         itemTampil += chunk.length;
-        loadMoreBox.classList.toggle("hidden", itemTampil >= bukuTersaring.length);
+        loadMoreBox.classList.toggle(
+          "hidden",
+          itemTampil >= bukuTersaring.length,
+        );
       }
 
       function loadMoreBuku() {
@@ -1093,31 +1145,48 @@
           alert("Tautan PDF tidak valid atau tidak tersedia.");
           return;
         }
-        document.getElementById("pdf-judul").textContent = title || "Membaca Buku";
+        document.getElementById("pdf-judul").textContent =
+          title || "Membaca Buku";
         document.getElementById("pdf-frame").src = safePdf;
         document.getElementById("modal-pdf").classList.remove("hidden");
-        panggilApi("recordRead", { bookId: String(id || "") }, { timeoutMs: 12000 })
-          .catch(function (error) {
-            console.warn("Statistik baca gagal:", error);
-          });
+        panggilApi(
+          "recordRead",
+          { bookId: String(id || "") },
+          { timeoutMs: 12000 },
+        ).catch(function (error) {
+          console.warn("Statistik baca gagal:", error);
+        });
       }
 
       function cariBuku(keywordInput) {
-        const keyword = String(keywordInput || "").toLowerCase().trim();
+        const keyword = String(keywordInput || "")
+          .toLowerCase()
+          .trim();
         const desktop = document.getElementById("search-desktop");
         const mobile = document.getElementById("search-mobile");
-        if (desktop && desktop.value !== keywordInput) desktop.value = keywordInput;
-        if (mobile && mobile.value !== keywordInput) mobile.value = keywordInput;
+        if (desktop && desktop.value !== keywordInput)
+          desktop.value = keywordInput;
+        if (mobile && mobile.value !== keywordInput)
+          mobile.value = keywordInput;
 
         const result = semuaBuku.filter(function (book) {
           return (
-            String(book.judul || "").toLowerCase().indexOf(keyword) >= 0 ||
-            String(book.pengarang || "").toLowerCase().indexOf(keyword) >= 0
+            String(book.judul || "")
+              .toLowerCase()
+              .indexOf(keyword) >= 0 ||
+            String(book.pengarang || "")
+              .toLowerCase()
+              .indexOf(keyword) >= 0
           );
         });
 
         document.querySelectorAll(".btn-kat").forEach(function (button) {
-          button.classList.remove("border", "border-primary", "text-primary", "font-semibold");
+          button.classList.remove(
+            "border",
+            "border-primary",
+            "text-primary",
+            "font-semibold",
+          );
           button.classList.add("text-gray-600", "font-medium");
         });
         renderBuku(result, true);
@@ -1152,7 +1221,11 @@
             tutupModal("modal-feedback");
           }
         } catch (error) {
-          alert(error && error.message ? error.message : "Pesan tidak dapat dikirim.");
+          alert(
+            error && error.message
+              ? error.message
+              : "Pesan tidak dapat dikirim.",
+          );
         } finally {
           button.disabled = false;
           button.textContent = "Kirim Pesan";
@@ -1163,6 +1236,5 @@
         muatDataAwal();
       });
     </script>
-
   </body>
 </html>
