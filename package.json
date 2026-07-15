@@ -1,0 +1,14 @@
+{
+  "name": "gas-elibrary-netlify-frontend",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frontend publik E-Library di Netlify dengan gateway aman menuju Google Apps Script.",
+  "scripts": {
+    "check": "node --check netlify/functions/elibrary.mjs",
+    "secret": "node scripts/generate-secret.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

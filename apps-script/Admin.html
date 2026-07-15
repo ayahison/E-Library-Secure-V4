@@ -1,0 +1,2195 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Admin | E-Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --color-primary: #006633;
+        --color-accent: #ffd700;
+      }
+      .bg-primary {
+        background-color: var(--color-primary);
+      }
+      .text-primary {
+        color: var(--color-primary);
+      }
+
+      /* Animasi transisi antar menu */
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+
+      /* Popup notifikasi ringan tanpa library tambahan */
+      .app-popup-backdrop {
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+      }
+      .app-popup-card {
+        animation: appPopupIn 0.18s ease-out;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+      }
+      .app-popup-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+      .app-popup-success { background: #dcfce7; color: #15803d; }
+      .app-popup-error { background: #fee2e2; color: #b91c1c; }
+      .app-popup-warning { background: #fef3c7; color: #b45309; }
+      .app-popup-info { background: #dbeafe; color: #1d4ed8; }
+      @keyframes appPopupIn {
+        from { opacity: 0; transform: translateY(10px) scale(0.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .app-popup-card { animation: none; }
+      }
+
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN LOGIN -->
+    <!-- ========================================== -->
+    <div
+      id="view-login"
+      class="min-h-screen flex items-center justify-center p-4"
+    >
+      <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
+        <div class="text-center mb-6">
+          <i class="fas fa-shield-alt text-4xl text-primary mb-2"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Login Admin</h2>
+          <p class="text-sm text-gray-500">E-Library Kabupaten Banyumas</p>
+        </div>
+        <form
+          onsubmit="
+            event.preventDefault();
+            prosesLoginUI();
+          "
+        >
+          <div class="mb-4">
+            <label class="block text-sm font-semibold mb-1">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-semibold mb-1">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            id="btn-login"
+            class="w-full bg-primary text-white font-bold py-2 rounded hover:bg-green-700 transition"
+          >
+            Masuk
+          </button>
+        </form>
+        <!-- Tambahan tombol kembali -->
+        <div class="mt-6 text-center">
+          <a
+            href="#"
+            onclick="kembaliKeIndex()"
+            class="text-sm text-gray-500 hover:text-green-700 font-semibold transition"
+          >
+            &larr; Kembali ke Halaman Depan
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. PANEL DASHBOARD UTAMA (Hidden by default) -->
+    <!-- ========================================== -->
+    <div
+      id="view-dashboard"
+      class="hidden min-h-screen flex flex-col md:flex-row"
+    >
+      <!-- SIDEBAR -->
+      <aside
+        class="w-full md:w-64 bg-primary text-white flex flex-col shadow-lg sticky top-0 md:h-screen z-50"
+      >
+        <div class="p-5 border-b border-green-700 flex items-center space-x-3">
+          <i class="fas fa-book-reader text-yellow-300 text-2xl"></i>
+          <h1 class="text-lg font-bold tracking-wider">PANEL ADMIN</h1>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 text-sm">
+          <a
+            href="#"
+            onclick="gantiMenu('menu-statistik')"
+            class="block p-3 rounded hover:bg-green-700 transition bg-green-700"
+            id="nav-statistik"
+            ><i class="fas fa-chart-line mr-2 w-5 text-center"></i> Statistik</a
+          >
+          <a
+            href="#"
+            onclick="gantiMenu('menu-buku')"
+            class="block p-3 rounded hover:bg-green-700 transition"
+            id="nav-buku"
+            ><i class="fas fa-book mr-2 w-5 text-center"></i> Kelola Buku</a
+          >
+          <a
+            href="#"
+            onclick="gantiMenu('menu-kategori')"
+            class="block p-3 rounded hover:bg-green-700 transition"
+            id="nav-kategori"
+            ><i class="fas fa-tags mr-2 w-5 text-center"></i> Kelola Kategori</a
+          >
+          <a
+            href="#"
+            onclick="gantiMenu('menu-feedback')"
+            class="block p-3 rounded hover:bg-green-700 transition relative"
+            id="nav-feedback"
+          >
+            <i class="fas fa-envelope mr-2 w-5 text-center"></i> Kritik & Saran
+            <span
+              id="badge-notif"
+              class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden"
+              >0</span
+            >
+          </a>
+          <a
+            href="#"
+            onclick="gantiMenu('menu-pengaturan')"
+            class="block p-3 rounded hover:bg-green-700 transition"
+            id="nav-pengaturan"
+            ><i class="fas fa-cogs mr-2 w-5 text-center"></i> Pengaturan</a
+          >
+        </nav>
+        <div class="p-4 border-t border-green-700">
+          <button
+            onclick="logoutUI()"
+            class="w-full text-left p-2 hover:text-yellow-300 transition"
+          >
+            <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <!-- AREA KONTEN (CONTENT AREA) -->
+      <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        <!-- MENU: STATISTIK (DASHBOARD) -->
+        <section id="menu-statistik" class="fade-in">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800">Statistik Layanan</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                Kunjungan dihitung berdasarkan sesi penggunaan, sehingga satu PC
+                dapat mencatat beberapa pemustaka secara bergantian.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8"
+          >
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500"
+            >
+              <p class="text-sm text-gray-500">Total Koleksi</p>
+              <h3 class="text-2xl font-bold" id="stat-buku">
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500"
+            >
+              <p class="text-sm text-gray-500">Total Kategori</p>
+              <h3 class="text-2xl font-bold" id="stat-kategori">
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-cyan-500"
+            >
+              <p class="text-sm text-gray-500">Kunjungan Hari Ini</p>
+              <h3 class="text-2xl font-bold" id="stat-kunjungan-hari">
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-500"
+            >
+              <p class="text-sm text-gray-500">Kunjungan Bulan Ini</p>
+              <h3 class="text-2xl font-bold" id="stat-kunjungan-bulan">
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500"
+            >
+              <p class="text-sm text-gray-500">Total Dibaca</p>
+              <h3 class="text-2xl font-bold" id="stat-dibaca">
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500"
+            >
+              <p class="text-sm text-gray-500">Buku Terpopuler</p>
+              <h3
+                class="text-sm font-bold mt-1 text-primary line-clamp-2"
+                id="stat-populer"
+              >
+                <i class="fas fa-spinner fa-spin text-sm"></i>
+              </h3>
+            </div>
+          </div>
+        </section>
+
+        <!-- MENU: KELOLA BUKU -->
+        <section id="menu-buku" class="hidden fade-in">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Manajemen Buku</h2>
+            <button
+              onclick="bukaFormBuku()"
+              class="bg-primary text-white px-4 py-2 rounded shadow hover:bg-green-700"
+            >
+              <i class="fas fa-plus mr-2"></i>Tambah Buku
+            </button>
+          </div>
+
+          <!-- Form Tambah Buku (Hidden Default) -->
+          <div
+            id="form-tambah-buku"
+            class="bg-white p-6 rounded-lg shadow-md mb-6 hidden"
+          >
+            <h3 class="font-bold text-lg mb-4 border-b pb-2">
+              Form Upload Buku Baru
+            </h3>
+            <form
+              onsubmit="
+                event.preventDefault();
+                validasiUploadDanKirim();
+              "
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-semibold mb-1"
+                    >Judul Buku</label
+                  >
+                  <input
+                    type="text"
+                    id="judul-buku"
+                    class="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-1"
+                    >Pengarang</label
+                  >
+                  <input
+                    type="text"
+                    id="pengarang-buku"
+                    class="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-1"
+                    >Kategori</label
+                  >
+                  <select
+                    id="kategori-buku"
+                    class="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">-- Pilih Kategori --</option>
+                    <!-- Data ditarik otomatis dari Sheet Kategori -->
+                  </select>
+                </div>
+              </div>
+
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded border"
+              >
+                <div>
+                  <label class="block text-sm font-semibold mb-1 text-primary"
+                    ><i class="fas fa-image mr-1"></i> Cover Buku (Max
+                    2MB)</label
+                  >
+                  <input
+                    type="file"
+                    id="file-cover"
+                    accept="image/jpeg, image/png"
+                    class="w-full text-sm"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    Format: JPG/PNG. Otomatis dikompres.
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-1 text-red-600"
+                    ><i class="fas fa-file-pdf mr-1"></i> File E-Book (Max
+                    15MB)</label
+                  >
+                  <input
+                    type="file"
+                    id="file-pdf"
+                    accept="application/pdf"
+                    class="w-full text-sm"
+                    required
+                  />
+                  <p class="text-xs text-gray-500 mt-1">Format wajib PDF.</p>
+                </div>
+              </div>
+
+              <div class="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onclick="tutupFormBuku()"
+                  class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  id="btn-submit-buku"
+                  class="px-4 py-2 bg-primary text-white rounded hover:bg-green-700"
+                >
+                  Simpan & Unggah
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabel Dummy -->
+          <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-200 text-gray-700 text-sm">
+                  <th class="p-3 border-b">Judul Buku</th>
+                  <th class="p-3 border-b">Kategori</th>
+                  <th class="p-3 border-b">Dibaca</th>
+                  <th class="p-3 border-b text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tabel-body-buku">
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="p-3 font-semibold text-sm">
+                    Sejarah Banyumas Era Kolonial
+                  </td>
+                  <td class="p-3 text-sm">Sejarah</td>
+                  <td class="p-3 text-sm">340x</td>
+                  <td class="p-3 text-center space-x-2">
+                    <button class="text-blue-500 hover:text-blue-700">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-700">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Kontrol Paginasi Admin -->
+            <div
+              id="paginasi-buku"
+              class="flex justify-between items-center mt-4 pt-4 border-t hidden"
+            >
+              <span
+                id="info-halaman-buku"
+                class="text-sm text-gray-500 font-medium"
+                >Halaman 1 dari 1</span
+              >
+              <div class="space-x-2">
+                <button
+                  id="btn-prev-buku"
+                  onclick="gantiHalamanBuku(-1)"
+                  class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+                </button>
+                <button
+                  id="btn-next-buku"
+                  onclick="gantiHalamanBuku(1)"
+                  class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MENU: KELOLA KATEGORI -->
+        <section id="menu-kategori" class="hidden fade-in">
+          <h2 class="text-2xl font-bold mb-6 text-gray-800">
+            Manajemen Kategori
+          </h2>
+
+          <div class="flex flex-col md:flex-row gap-6">
+            <!-- Kiri: Form Tambah Kategori -->
+            <div class="w-full md:w-1/3">
+              <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2">
+                  Tambah Kategori
+                </h3>
+                <form
+                  onsubmit="
+                    event.preventDefault();
+                    tambahKategoriUI();
+                  "
+                >
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1"
+                      >Nama Kategori Baru</label
+                    >
+                    <input
+                      type="text"
+                      id="input-nama-kategori"
+                      class="w-full p-2 border rounded"
+                      placeholder="Contoh: Sejarah Lokal"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    id="btn-tambah-kategori"
+                    class="w-full bg-primary text-white py-2 rounded hover:bg-green-700 transition"
+                  >
+                    <i class="fas fa-plus mr-1"></i> Tambah Kategori
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Kanan: Tabel Daftar Kategori -->
+            <div class="w-full md:w-2/3">
+              <div
+                class="bg-white rounded-lg shadow-md overflow-x-auto relative min-h-[200px]"
+              >
+                <!-- Indikator Loading -->
+                <div
+                  id="loading-kategori"
+                  class="absolute inset-0 bg-white bg-opacity-80 flex justify-center items-center z-10 hidden"
+                >
+                  <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
+                </div>
+
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-gray-200 text-gray-700 text-sm">
+                      <th class="p-3 border-b">ID Kategori</th>
+                      <th class="p-3 border-b">Nama Kategori</th>
+                      <th class="p-3 border-b text-center w-24">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabel-body-kategori">
+                    <!-- Data akan diisi otomatis oleh Javascript -->
+                    <tr>
+                      <td colspan="3" class="p-4 text-center text-gray-500">
+                        Memuat data...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MENU: KRITIK & SARAN (Kotak Masuk) -->
+        <section id="menu-feedback" class="hidden fade-in">
+          <h2 class="text-2xl font-bold mb-6 text-gray-800">
+            Kritik & Saran Pemustaka
+          </h2>
+
+          <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="bg-gray-200 text-gray-700">
+                  <th class="p-3">Tanggal</th>
+                  <th class="p-3">Pengirim</th>
+                  <th class="p-3">Pesan</th>
+                  <th class="p-3 text-center">Status</th>
+                </tr>
+              </thead>
+
+              <tbody id="tabel-body-feedback">
+                <!-- Data akan diisi oleh JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- MENU: PENGATURAN -->
+        <section id="menu-pengaturan" class="hidden fade-in">
+          <h2 class="text-2xl font-bold mb-6 text-gray-800">
+            Pengaturan Identitas Perpustakaan
+          </h2>
+          <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl relative">
+            <!-- Indikator Loading Data -->
+            <div
+              id="loading-pengaturan"
+              class="absolute inset-0 bg-white bg-opacity-80 flex justify-center items-center z-10 hidden"
+            >
+              <i class="fas fa-spinner fa-spin text-3xl text-primary"></i>
+            </div>
+
+            <form
+              onsubmit="
+                event.preventDefault();
+                simpanPengaturanUI();
+              "
+            >
+              <div class="mb-4">
+                <label class="block text-sm font-semibold mb-1"
+                  >Nama Perpustakaan</label
+                >
+                <input
+                  type="text"
+                  id="setting-nama"
+                  class="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div class="mb-4">
+                <label class="block text-sm font-semibold mb-1"
+                  >Alamat (Untuk Footer/Identitas)</label
+                >
+                <input
+                  type="text"
+                  id="setting-alamat"
+                  class="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div class="mb-4">
+                <label class="block text-sm font-semibold mb-1"
+                  >Pesan Sambutan (Pop-up Depan)</label
+                >
+                <textarea
+                  id="setting-sambutan"
+                  class="w-full p-2 border rounded"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              <div class="mb-6">
+                <label class="block text-sm font-semibold mb-1"
+                  >Pilihan Tema UI</label
+                >
+                <select id="setting-tema" class="w-full p-2 border rounded">
+                  <option value="default">Tema Banyumas (Hijau-Kuning)</option>
+                  <option value="light">Tema Modern (Putih-Biru)</option>
+                  <option value="dark">Tema Gelap (Malam)</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                id="btn-simpan-setting"
+                class="bg-primary text-white px-6 py-2 rounded hover:bg-green-700 transition"
+              >
+                Simpan Pengaturan
+              </button>
+            </form>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 max-w-6xl">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h3 class="font-bold text-lg mb-1">Keamanan & Backup</h3>
+              <p class="text-sm text-gray-500 mb-5">
+                Backup database cepat menyimpan Spreadsheet dan manifest. Backup koleksi lengkap juga menyalin seluruh cover dan PDF ke satu paket pemulihan V3.
+              </p>
+
+              <div class="space-y-2 text-sm mb-5 bg-gray-50 border rounded-lg p-4">
+                <p><span class="font-semibold">Backup terakhir:</span> <span id="status-backup-terakhir">Memuat...</span></p>
+                <p><span class="font-semibold">Backup mingguan:</span> <span id="status-backup-mingguan">Memuat...</span></p>
+                <p><span class="font-semibold">Akun master:</span> <span id="status-master-keamanan">Memuat...</span></p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
+                <button type="button" id="btn-backup-sekarang" onclick="buatBackupUI()" class="bg-primary text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                  Backup Database Cepat
+                </button>
+                <button type="button" id="btn-backup-koleksi" onclick="buatBackupKoleksiUI()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                  Backup Koleksi Lengkap
+                </button>
+                <button type="button" id="btn-backup-mingguan" onclick="aktifkanBackupMingguanUI()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+                  Aktifkan Backup Mingguan
+                </button>
+                <button type="button" id="btn-cek-integritas" onclick="mulaiCekIntegritasUI()" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 transition">
+                  Periksa File Aktif
+                </button>
+              </div>
+
+              <div class="border-t pt-5 mb-6">
+                <h4 class="font-bold mb-2">Backup & Restore Center V3</h4>
+                <p class="text-xs text-gray-500 mb-3">Proses ribuan file berjalan bertahap melalui trigger Apps Script. Halaman boleh ditutup; status dapat dilihat kembali di sini.</p>
+
+                <div class="bg-gray-50 border rounded-lg p-4 mb-4">
+                  <div class="flex justify-between gap-3 items-start mb-2">
+                    <div>
+                      <p class="text-sm font-semibold">Status pekerjaan</p>
+                      <p id="status-pekerjaan-pemeliharaan" class="text-xs text-gray-600 mt-1">Tidak ada pekerjaan aktif.</p>
+                    </div>
+                    <button type="button" onclick="muatStatusPekerjaan()" class="text-xs text-primary font-semibold hover:underline">Muat ulang</button>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div id="progress-pekerjaan" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                  </div>
+                  <p id="angka-progress-pekerjaan" class="text-xs text-gray-500">0 / 0</p>
+                  <button type="button" id="btn-batalkan-pekerjaan" onclick="batalkanPekerjaanUI()" class="mt-3 text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 hidden">Batalkan pekerjaan</button>
+                </div>
+
+                <label class="block text-sm font-semibold mb-1">Pilih paket Backup Koleksi V3</label>
+                <select id="restore-backup-set" class="w-full p-2 border rounded mb-2">
+                  <option value="">-- Muat daftar backup --</option>
+                </select>
+                <input id="restore-backup-manual-id" type="text" class="w-full p-2 border rounded mb-3 text-sm" placeholder="Atau tempel ID/URL folder paket Backup V3" />
+                <label class="block text-sm font-semibold mb-1">Mode pemulihan</label>
+                <select id="restore-mode" class="w-full p-2 border rounded mb-3">
+                  <option value="files_only">Pulihkan file hilang saja</option>
+                  <option value="full">Pulihkan katalog dan file lengkap</option>
+                </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                  <button type="button" id="btn-simulasi-restore" onclick="mulaiRestoreUI(true)" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">Simulasi Restore</button>
+                  <button type="button" id="btn-restore" onclick="mulaiRestoreUI(false)" class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800">Jalankan Restore</button>
+                </div>
+
+                <details class="border rounded-lg p-3 bg-gray-50">
+                  <summary class="font-semibold text-sm cursor-pointer">Import backup lama/manual</summary>
+                  <p class="text-xs text-gray-500 mt-2 mb-3">Masukkan ID/URL Spreadsheet backup serta folder cover dan PDF. Sistem mencocokkan nama berbasis ID buku, metadata file, atau nama judul yang sama persis.</p>
+                  <input id="legacy-spreadsheet-id" type="text" class="w-full p-2 border rounded mb-2 text-sm" placeholder="ID atau URL Spreadsheet backup" />
+                  <input id="legacy-cover-folder-id" type="text" class="w-full p-2 border rounded mb-2 text-sm" placeholder="ID atau URL folder backup cover" />
+                  <input id="legacy-pdf-folder-id" type="text" class="w-full p-2 border rounded mb-3 text-sm" placeholder="ID atau URL folder backup PDF" />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="button" onclick="mulaiRestoreLegacyUI(true)" class="bg-gray-700 text-white px-3 py-2 rounded text-sm">Simulasi Legacy</button>
+                    <button type="button" onclick="mulaiRestoreLegacyUI(false)" class="bg-red-700 text-white px-3 py-2 rounded text-sm">Restore Legacy</button>
+                  </div>
+                </details>
+              </div>
+
+              <div class="border-t pt-5">
+                <h4 class="font-bold mb-3">Ubah Password Admin</h4>
+                <form onsubmit="event.preventDefault(); ubahPasswordUI();" class="space-y-3">
+                  <input
+                    type="password"
+                    id="password-lama-admin"
+                    class="w-full p-2 border rounded"
+                    placeholder="Password lama"
+                    autocomplete="current-password"
+                    required
+                  />
+                  <input
+                    type="password"
+                    id="password-baru-admin"
+                    class="w-full p-2 border rounded"
+                    placeholder="Password baru minimal 10 karakter"
+                    autocomplete="new-password"
+                    required
+                  />
+                  <input
+                    type="password"
+                    id="konfirmasi-password-admin"
+                    class="w-full p-2 border rounded"
+                    placeholder="Ulangi password baru"
+                    autocomplete="new-password"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    id="btn-ubah-password"
+                    class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 transition"
+                  >
+                    Ubah Password
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="p-5 border-b flex justify-between items-center">
+                <div>
+                  <h3 class="font-bold text-lg">Aktivitas Terbaru</h3>
+                  <p class="text-xs text-gray-500">Login, perubahan data, penghapusan, dan backup.</p>
+                </div>
+                <button
+                  type="button"
+                  onclick="muatAktivitas()"
+                  class="text-sm text-primary font-semibold hover:underline"
+                >
+                  Muat Ulang
+                </button>
+              </div>
+              <div class="overflow-x-auto max-h-[480px] overflow-y-auto">
+                <table class="w-full text-left">
+                  <thead class="sticky top-0 bg-gray-100 text-gray-700">
+                    <tr>
+                      <th class="p-2 text-xs">Waktu</th>
+                      <th class="p-2 text-xs">Admin</th>
+                      <th class="p-2 text-xs">Aksi</th>
+                      <th class="p-2 text-xs">Target</th>
+                      <th class="p-2 text-xs">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabel-body-log-aktivitas">
+                    <tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat aktivitas...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </main>
+    </div>
+    <!-- Modal Edit Buku -->
+    <div
+      id="modal-edit-buku"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden"
+      >
+        <div
+          class="bg-primary p-4 text-white flex justify-between items-center"
+        >
+          <h3 class="font-bold">Edit Data Buku</h3>
+          <button onclick="tutupModalEdit()" class="hover:text-red-300">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <form
+          onsubmit="
+            event.preventDefault();
+            simpanEditBukuUI();
+          "
+          class="p-6"
+        >
+          <input type="hidden" id="edit-id-buku" />
+          <div class="mb-4">
+            <label class="block text-sm font-semibold mb-1">Judul Buku</label>
+            <input
+              type="text"
+              id="edit-judul"
+              class="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold mb-1">Pengarang</label>
+            <input
+              type="text"
+              id="edit-pengarang"
+              class="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-semibold mb-1">Kategori</label>
+            <select
+              id="edit-kategori"
+              class="w-full p-2 border rounded"
+              required
+            >
+              <!-- Option akan disalin otomatis via JS -->
+            </select>
+          </div>
+          <button
+            type="submit"
+            id="btn-simpan-edit"
+            class="w-full bg-primary text-white font-bold py-2 rounded hover:bg-green-700 transition"
+          >
+            Simpan Perubahan
+          </button>
+        </form>
+      </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- SCRIPT LOGIKA UI & VALIDASI -->
+    <!-- ========================================== -->
+    <script>
+      "use strict";
+
+
+      let appPopupState = null;
+
+      function deteksiTipePopup(pesan) {
+        const text = String(pesan || "").toLowerCase();
+        if (/gagal|salah|tidak dapat|tidak valid|tidak tersedia|ditolak|error|melebihi|wajib diisi|tidak boleh kosong/.test(text)) {
+          return "error";
+        }
+        if (/berhasil|selesai|dimulai|diperbarui|ditambahkan|dihapus|diaktifkan|dibatalkan|terkirim|tersimpan/.test(text)) {
+          return "success";
+        }
+        if (/peringatan|pastikan|perhatian|wajib|pilih|lengkapi/.test(text)) {
+          return "warning";
+        }
+        return "info";
+      }
+
+      function konfigurasiPopup(tipe) {
+        const configs = {
+          success: {
+            title: "Berhasil",
+            icon: "fas fa-check",
+            iconClass: "app-popup-success",
+            buttonClass: "bg-green-600 hover:bg-green-700",
+          },
+          error: {
+            title: "Terjadi Kendala",
+            icon: "fas fa-exclamation-triangle",
+            iconClass: "app-popup-error",
+            buttonClass: "bg-red-600 hover:bg-red-700",
+          },
+          warning: {
+            title: "Perhatian",
+            icon: "fas fa-exclamation",
+            iconClass: "app-popup-warning",
+            buttonClass: "bg-amber-600 hover:bg-amber-700",
+          },
+          info: {
+            title: "Informasi",
+            icon: "fas fa-info",
+            iconClass: "app-popup-info",
+            buttonClass: "bg-blue-600 hover:bg-blue-700",
+          },
+        };
+        return configs[tipe] || configs.info;
+      }
+
+      function pastikanPopupTersedia() {
+        let overlay = document.getElementById("app-popup-overlay");
+        if (overlay) return overlay;
+
+        overlay = document.createElement("div");
+        overlay.id = "app-popup-overlay";
+        overlay.className =
+          "app-popup-backdrop fixed inset-0 z-[10000] hidden items-center justify-center p-4";
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-labelledby", "app-popup-title");
+        overlay.setAttribute("aria-describedby", "app-popup-message");
+
+        const card = document.createElement("div");
+        card.className =
+          "app-popup-card w-full max-w-sm rounded-2xl bg-white p-6 text-center";
+
+        const icon = document.createElement("div");
+        icon.id = "app-popup-icon";
+        icon.className = "app-popup-icon mx-auto mb-4";
+        const iconElement = document.createElement("i");
+        iconElement.id = "app-popup-icon-element";
+        icon.appendChild(iconElement);
+
+        const title = document.createElement("h3");
+        title.id = "app-popup-title";
+        title.className = "text-xl font-bold text-gray-900";
+
+        const message = document.createElement("p");
+        message.id = "app-popup-message";
+        message.className = "mt-2 whitespace-pre-line text-sm leading-6 text-gray-600";
+
+        const actions = document.createElement("div");
+        actions.className = "mt-6 flex justify-center gap-3";
+
+        const cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.id = "app-popup-cancel";
+        cancelButton.className =
+          "hidden rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50";
+        cancelButton.textContent = "Batal";
+        cancelButton.addEventListener("click", function () {
+          tutupPopupAplikasi(false);
+        });
+
+        const confirmButton = document.createElement("button");
+        confirmButton.type = "button";
+        confirmButton.id = "app-popup-confirm";
+        confirmButton.className =
+          "rounded-lg px-5 py-2 text-sm font-bold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2";
+        confirmButton.textContent = "Tutup";
+        confirmButton.addEventListener("click", function () {
+          tutupPopupAplikasi(true);
+        });
+
+        actions.appendChild(cancelButton);
+        actions.appendChild(confirmButton);
+        card.appendChild(icon);
+        card.appendChild(title);
+        card.appendChild(message);
+        card.appendChild(actions);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener("click", function (event) {
+          if (event.target === overlay && appPopupState && !appPopupState.confirmation) {
+            tutupPopupAplikasi(true);
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key !== "Escape" || !appPopupState) return;
+          tutupPopupAplikasi(appPopupState.confirmation ? false : true);
+        });
+
+        return overlay;
+      }
+
+      function tutupPopupAplikasi(result) {
+        const overlay = document.getElementById("app-popup-overlay");
+        if (appPopupState && appPopupState.timer) {
+          clearTimeout(appPopupState.timer);
+        }
+        const resolve = appPopupState && appPopupState.resolve;
+        appPopupState = null;
+        if (overlay) {
+          overlay.classList.add("hidden");
+          overlay.classList.remove("flex");
+        }
+        if (typeof resolve === "function") resolve(Boolean(result));
+      }
+
+      function tampilkanPopupAplikasi(pesan, options) {
+        const opts = options || {};
+        const tipe = opts.type || deteksiTipePopup(pesan);
+        const config = konfigurasiPopup(tipe);
+        const overlay = pastikanPopupTersedia();
+
+        if (appPopupState) tutupPopupAplikasi(false);
+
+        const icon = document.getElementById("app-popup-icon");
+        const iconElement = document.getElementById("app-popup-icon-element");
+        const title = document.getElementById("app-popup-title");
+        const message = document.getElementById("app-popup-message");
+        const cancelButton = document.getElementById("app-popup-cancel");
+        const confirmButton = document.getElementById("app-popup-confirm");
+
+        icon.className = "app-popup-icon mx-auto mb-4 " + config.iconClass;
+        iconElement.className = config.icon;
+        title.textContent = opts.title || config.title;
+        message.textContent = String(pesan || "");
+
+        const confirmation = Boolean(opts.confirmation);
+        cancelButton.classList.toggle("hidden", !confirmation);
+        cancelButton.textContent = opts.cancelText || "Batal";
+        confirmButton.textContent = opts.confirmText || (confirmation ? "Lanjutkan" : "Tutup");
+        confirmButton.className =
+          "rounded-lg px-5 py-2 text-sm font-bold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 " +
+          (confirmation && opts.danger
+            ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            : config.buttonClass + " focus:ring-gray-400");
+
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+
+        return new Promise(function (resolve) {
+          appPopupState = {
+            resolve: resolve,
+            confirmation: confirmation,
+            timer: null,
+          };
+
+          const autoClose = Number(opts.autoClose || 0);
+          if (!confirmation && autoClose > 0) {
+            appPopupState.timer = setTimeout(function () {
+              tutupPopupAplikasi(true);
+            }, autoClose);
+          }
+
+          setTimeout(function () {
+            confirmButton.focus();
+          }, 20);
+        });
+      }
+
+      function tampilkanNotifikasi(pesan, tipe, judul) {
+        const resolvedType = tipe || deteksiTipePopup(pesan);
+        const autoClose = resolvedType === "success" ? 2200 : 0;
+        return tampilkanPopupAplikasi(pesan, {
+          type: resolvedType,
+          title: judul,
+          autoClose: autoClose,
+        });
+      }
+
+      function tampilkanKonfirmasi(pesan, judul, confirmText, danger) {
+        return tampilkanPopupAplikasi(pesan, {
+          type: danger ? "warning" : "info",
+          title: judul || "Konfirmasi",
+          confirmation: true,
+          confirmText: confirmText || "Lanjutkan",
+          cancelText: "Batal",
+          danger: Boolean(danger),
+        });
+      }
+
+      // Semua alert lama otomatis memakai popup profesional ini.
+      window.alert = function (pesan) {
+        tampilkanNotifikasi(String(pesan || ""));
+      };
+
+
+      const KUNCI_TOKEN_ADMIN = "elibrary_admin_token";
+      let semuaBukuAdmin = [];
+      let halamanSaatIni = 1;
+      const LIMIT_ADMIN = 10;
+
+      function getAdminToken() {
+        return sessionStorage.getItem(KUNCI_TOKEN_ADMIN) || "";
+      }
+
+      function kosongkanElemen(elemen) {
+        while (elemen && elemen.firstChild) elemen.removeChild(elemen.firstChild);
+      }
+
+      function buatIkon(className) {
+        const icon = document.createElement("i");
+        icon.className = className;
+        return icon;
+      }
+
+      function setTombolLoading(button, loading, normalText, loadingText) {
+        if (!button) return;
+        button.disabled = loading;
+        kosongkanElemen(button);
+        if (loading) {
+          button.appendChild(buatIkon("fas fa-spinner fa-spin mr-1"));
+          button.appendChild(document.createTextNode(loadingText || "Memproses..."));
+        } else {
+          button.textContent = normalText;
+        }
+      }
+
+      function buatBarisStatus(tbody, colspan, text, className, spinner) {
+        kosongkanElemen(tbody);
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = colspan;
+        td.className = className || "p-4 text-center text-gray-500";
+        if (spinner) td.appendChild(buatIkon("fas fa-spinner fa-spin mr-2"));
+        td.appendChild(document.createTextNode(text));
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+
+      function responsTidakSah(response) {
+        return response && response.status === "unauthorized";
+      }
+
+      function kembaliKeLogin(message) {
+        sessionStorage.removeItem(KUNCI_TOKEN_ADMIN);
+        document.getElementById("view-dashboard").classList.add("hidden");
+        document.getElementById("view-login").classList.remove("hidden");
+        document.getElementById("password").value = "";
+        document.getElementById("btn-login").disabled = false;
+        document.getElementById("btn-login").textContent = "Masuk";
+        if (message) alert(message);
+      }
+
+      function periksaResponsAdmin(response) {
+        if (responsTidakSah(response)) {
+          kembaliKeLogin(response.pesan);
+          return false;
+        }
+        return true;
+      }
+
+      function tampilkanDashboardAdmin(session) {
+        document.getElementById("view-login").classList.add("hidden");
+        document.getElementById("view-dashboard").classList.remove("hidden");
+        gantiMenu("menu-statistik");
+        muatDataPesan();
+      }
+
+      function prosesLoginUI() {
+        const btn = document.getElementById("btn-login");
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!username || !password) {
+          alert("Username dan password wajib diisi.");
+          return;
+        }
+
+        setTombolLoading(btn, true, "Masuk", "Memproses...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(btn, false, "Masuk");
+            if (response && response.status === "success" && response.token) {
+              sessionStorage.setItem(KUNCI_TOKEN_ADMIN, response.token);
+              document.getElementById("password").value = "";
+              tampilkanDashboardAdmin(response.session || {});
+              return;
+            }
+            alert(response && response.pesan ? response.pesan : "Login gagal.");
+          })
+          .withFailureHandler(function (error) {
+            console.error("Login gagal:", error);
+            setTombolLoading(btn, false, "Masuk");
+            alert("Tidak dapat terhubung ke server.");
+          })
+          .prosesLogin(username, password);
+      }
+
+      function verifikasiSesiSaatMuat() {
+        const token = getAdminToken();
+        if (!token) {
+          kembaliKeLogin();
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (response && response.status === "success") {
+              tampilkanDashboardAdmin(response.data || {});
+            } else {
+              kembaliKeLogin();
+            }
+          })
+          .withFailureHandler(function () {
+            kembaliKeLogin();
+          })
+          .verifikasiSesiAdmin(token);
+      }
+
+      function logoutUI() {
+        if (timerStatusPekerjaan) {
+          clearInterval(timerStatusPekerjaan);
+          timerStatusPekerjaan = null;
+        }
+        const token = getAdminToken();
+        sessionStorage.removeItem(KUNCI_TOKEN_ADMIN);
+        kembaliKeLogin();
+        if (token) google.script.run.logoutAdmin(token);
+      }
+
+      function kembaliKeIndex() {
+        document.body.style.cursor = "wait";
+        google.script.run
+          .withSuccessHandler(function (url) {
+            document.body.style.cursor = "default";
+            window.top.location.href = url;
+          })
+          .withFailureHandler(function () {
+            document.body.style.cursor = "default";
+            alert("Tidak dapat membuka halaman depan.");
+          })
+          .getPublicFrontendUrl();
+      }
+
+      function gantiMenu(idMenu) {
+        [
+          "menu-statistik",
+          "menu-buku",
+          "menu-kategori",
+          "menu-feedback",
+          "menu-pengaturan",
+        ].forEach(function (id) {
+          const section = document.getElementById(id);
+          if (section) section.classList.add("hidden");
+        });
+
+        [
+          "nav-statistik",
+          "nav-buku",
+          "nav-kategori",
+          "nav-feedback",
+          "nav-pengaturan",
+        ].forEach(function (id) {
+          const nav = document.getElementById(id);
+          if (nav) nav.classList.remove("bg-green-700");
+        });
+
+        const activeSection = document.getElementById(idMenu);
+        const activeNav = document.getElementById(idMenu.replace("menu-", "nav-"));
+        if (activeSection) activeSection.classList.remove("hidden");
+        if (activeNav) activeNav.classList.add("bg-green-700");
+
+        if (idMenu === "menu-statistik") muatStatistik();
+        if (idMenu === "menu-buku") muatDataBuku();
+        if (idMenu === "menu-kategori") muatDataKategori();
+        if (idMenu === "menu-feedback") muatDataPesan();
+        if (idMenu === "menu-pengaturan") {
+          muatDataPengaturan();
+          muatStatusPemeliharaan();
+          muatStatusPekerjaan();
+          muatDaftarBackupKoleksi();
+          muatAktivitas();
+        }
+      }
+
+      function muatDropdownKategori(selectId, nilaiTerpilih) {
+        const select = document.getElementById(selectId);
+        select.disabled = true;
+        kosongkanElemen(select);
+        const loadingOption = document.createElement("option");
+        loadingOption.value = "";
+        loadingOption.textContent = "Memuat kategori...";
+        select.appendChild(loadingOption);
+
+        google.script.run
+          .withSuccessHandler(function (data) {
+            const categories = Array.isArray(data) ? data : [];
+            kosongkanElemen(select);
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "-- Pilih Kategori --";
+            select.appendChild(placeholder);
+
+            categories.forEach(function (item) {
+              const option = document.createElement("option");
+              option.value = String(item.nama || "");
+              option.textContent = String(item.nama || "");
+              select.appendChild(option);
+            });
+
+            const current = String(nilaiTerpilih || "");
+            const exists = categories.some(function (item) {
+              return String(item.nama || "") === current;
+            });
+            if (current && !exists) {
+              const oldOption = document.createElement("option");
+              oldOption.value = current;
+              oldOption.textContent = current + " (kategori lama)";
+              select.appendChild(oldOption);
+            }
+            select.value = current;
+            select.disabled = false;
+          })
+          .withFailureHandler(function (error) {
+            console.error("Kategori gagal dimuat:", error);
+            kosongkanElemen(select);
+            const option = document.createElement("option");
+            option.textContent = "Kategori gagal dimuat";
+            select.appendChild(option);
+            select.disabled = false;
+          })
+          .getKategoriData();
+      }
+
+      function bukaFormBuku() {
+        document.getElementById("form-tambah-buku").classList.remove("hidden");
+        muatDropdownKategori("kategori-buku", "");
+      }
+
+      function tutupFormBuku() {
+        document.getElementById("form-tambah-buku").classList.add("hidden");
+      }
+
+      function fileKeBase64(file) {
+        return new Promise(function (resolve, reject) {
+          if (!file) {
+            resolve(null);
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function () {
+            const result = String(reader.result || "");
+            resolve(result.indexOf(",") >= 0 ? result.split(",")[1] : "");
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function validasiUploadDanKirim() {
+        const token = getAdminToken();
+        if (!token) return kembaliKeLogin("Silakan login kembali.");
+
+        const cover = document.getElementById("file-cover").files[0];
+        const pdf = document.getElementById("file-pdf").files[0];
+        const title = document.getElementById("judul-buku").value.trim();
+        const author = document.getElementById("pengarang-buku").value.trim();
+        const category = document.getElementById("kategori-buku").value;
+        const button = document.getElementById("btn-submit-buku");
+
+        if (!title || !author || !category) {
+          alert("Judul, pengarang, dan kategori wajib diisi.");
+          return;
+        }
+        if (!pdf || pdf.type !== "application/pdf") {
+          alert("Pilih file PDF yang valid.");
+          return;
+        }
+        if (pdf.size > 15 * 1024 * 1024) {
+          alert("Ukuran PDF melebihi 15 MB.");
+          return;
+        }
+        if (cover && cover.size > 2 * 1024 * 1024) {
+          alert("Ukuran cover melebihi 2 MB.");
+          return;
+        }
+        if (cover && ["image/jpeg", "image/png"].indexOf(cover.type) < 0) {
+          alert("Cover hanya boleh JPG atau PNG.");
+          return;
+        }
+
+        setTombolLoading(button, true, "Simpan & Unggah", "Sedang mengunggah...");
+        Promise.all([fileKeBase64(cover), fileKeBase64(pdf)])
+          .then(function (values) {
+            const payload = {
+              judul: title,
+              pengarang: author,
+              kategori: category,
+              coverName: cover ? cover.name : "",
+              coverMime: cover ? cover.type : "",
+              coverBase64: values[0] || "",
+              pdfName: pdf.name,
+              pdfMime: pdf.type,
+              pdfBase64: values[1] || "",
+            };
+
+            google.script.run
+              .withSuccessHandler(function (response) {
+                setTombolLoading(button, false, "Simpan & Unggah");
+                if (!periksaResponsAdmin(response)) return;
+                if (response.status === "success") {
+                  alert(response.pesan);
+                  document.querySelector("#form-tambah-buku form").reset();
+                  tutupFormBuku();
+                  muatDataBuku();
+                  muatStatistik();
+                  return;
+                }
+                alert(response.pesan || "Buku gagal disimpan.");
+              })
+              .withFailureHandler(function (error) {
+                console.error("Upload gagal:", error);
+                setTombolLoading(button, false, "Simpan & Unggah");
+                alert("Buku gagal diunggah.");
+              })
+              .simpanBuku(token, payload);
+          })
+          .catch(function (error) {
+            console.error("Pembacaan file gagal:", error);
+            setTombolLoading(button, false, "Simpan & Unggah");
+            alert("File tidak dapat dibaca.");
+          });
+      }
+
+      function muatDataPengaturan() {
+        document.getElementById("loading-pengaturan").classList.remove("hidden");
+        google.script.run
+          .withSuccessHandler(function (data) {
+            data = data || {};
+            document.getElementById("setting-nama").value = data.Nama_Perpus || "";
+            document.getElementById("setting-alamat").value = data.Alamat || "";
+            document.getElementById("setting-sambutan").value = data.Teks_Sambutan || "";
+            document.getElementById("setting-tema").value = data.Tema_Warna || "default";
+            document.getElementById("loading-pengaturan").classList.add("hidden");
+          })
+          .withFailureHandler(function () {
+            document.getElementById("loading-pengaturan").classList.add("hidden");
+            alert("Pengaturan gagal dimuat.");
+          })
+          .getPengaturanData();
+      }
+
+      function simpanPengaturanUI() {
+        const token = getAdminToken();
+        const button = document.getElementById("btn-simpan-setting");
+        const payload = {
+          nama: document.getElementById("setting-nama").value,
+          alamat: document.getElementById("setting-alamat").value,
+          sambutan: document.getElementById("setting-sambutan").value,
+          tema: document.getElementById("setting-tema").value,
+        };
+
+        setTombolLoading(button, true, "Simpan Pengaturan", "Menyimpan...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Simpan Pengaturan");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Selesai.");
+            if (response.status === "success") muatAktivitas();
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Simpan Pengaturan");
+            alert("Pengaturan gagal disimpan.");
+          })
+          .simpanPengaturan(token, payload);
+      }
+
+      function muatDataKategori() {
+        const tbody = document.getElementById("tabel-body-kategori");
+        document.getElementById("loading-kategori").classList.remove("hidden");
+
+        google.script.run
+          .withSuccessHandler(function (data) {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            const categories = Array.isArray(data) ? data : [];
+            kosongkanElemen(tbody);
+            if (!categories.length) {
+              buatBarisStatus(tbody, 3, "Belum ada data kategori.");
+              return;
+            }
+
+            categories.forEach(function (item) {
+              const tr = document.createElement("tr");
+              tr.className = "border-b hover:bg-gray-50";
+
+              const tdId = document.createElement("td");
+              tdId.className = "p-3 text-xs text-gray-500";
+              tdId.textContent = String(item.id || "");
+
+              const tdName = document.createElement("td");
+              tdName.className = "p-3 font-semibold text-sm";
+              tdName.textContent = String(item.nama || "");
+
+              const tdActions = document.createElement("td");
+              tdActions.className = "p-3 text-center space-x-2";
+
+              const editButton = document.createElement("button");
+              editButton.className = "text-blue-500 hover:text-blue-700";
+              editButton.title = "Edit";
+              editButton.appendChild(buatIkon("fas fa-edit"));
+              editButton.addEventListener("click", function () {
+                editKategoriUI(String(item.id || ""), String(item.nama || ""));
+              });
+
+              const deleteButton = document.createElement("button");
+              deleteButton.className = "text-red-500 hover:text-red-700";
+              deleteButton.title = "Hapus";
+              deleteButton.appendChild(buatIkon("fas fa-trash"));
+              deleteButton.addEventListener("click", function () {
+                hapusKategoriUI(String(item.id || ""), String(item.nama || ""));
+              });
+
+              tdActions.appendChild(editButton);
+              tdActions.appendChild(deleteButton);
+              tr.appendChild(tdId);
+              tr.appendChild(tdName);
+              tr.appendChild(tdActions);
+              tbody.appendChild(tr);
+            });
+          })
+          .withFailureHandler(function () {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            buatBarisStatus(tbody, 3, "Kategori gagal dimuat.", "p-4 text-center text-red-600");
+          })
+          .getKategoriData();
+      }
+
+      function tambahKategoriUI() {
+        const input = document.getElementById("input-nama-kategori");
+        const button = document.getElementById("btn-tambah-kategori");
+        const name = input.value.trim();
+        if (!name) return;
+
+        setTombolLoading(button, true, "Tambah Kategori", "Memproses...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Tambah Kategori");
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status === "success") {
+              input.value = "";
+              muatDataKategori();
+              muatStatistik();
+              muatAktivitas();
+            } else {
+              alert(response.pesan);
+            }
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Tambah Kategori");
+            alert("Kategori gagal ditambahkan.");
+          })
+          .tambahKategori(getAdminToken(), name);
+      }
+
+      function editKategoriUI(id, oldName) {
+        const newName = prompt('Ubah nama kategori "' + oldName + '" menjadi:', oldName);
+        if (newName === null || !newName.trim() || newName.trim() === oldName) return;
+
+        document.getElementById("loading-kategori").classList.remove("hidden");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status === "success") {
+              muatDataKategori();
+              muatDataBuku();
+              muatAktivitas();
+            } else {
+              alert(response.pesan);
+            }
+          })
+          .withFailureHandler(function () {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            alert("Kategori gagal diperbarui.");
+          })
+          .editKategori(getAdminToken(), id, newName.trim());
+      }
+
+      async function hapusKategoriUI(id, name) {
+        const setuju = await tampilkanKonfirmasi('Hapus kategori "' + name + '"?', "Hapus Kategori", "Hapus", true);
+        if (!setuju) return;
+        document.getElementById("loading-kategori").classList.remove("hidden");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status === "success") {
+              muatDataKategori();
+              muatStatistik();
+              muatAktivitas();
+            } else {
+              alert(response.pesan);
+            }
+          })
+          .withFailureHandler(function () {
+            document.getElementById("loading-kategori").classList.add("hidden");
+            alert("Kategori gagal dihapus.");
+          })
+          .hapusKategori(getAdminToken(), id);
+      }
+
+      function muatDataBuku() {
+        const tbody = document.getElementById("tabel-body-buku");
+        buatBarisStatus(tbody, 4, "Memuat data buku...", "p-4 text-center text-gray-500", true);
+        document.getElementById("paginasi-buku").classList.add("hidden");
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") {
+              buatBarisStatus(tbody, 4, response.pesan || "Data buku gagal dimuat.", "p-4 text-center text-red-600");
+              return;
+            }
+            semuaBukuAdmin = Array.isArray(response.data) ? response.data : [];
+            halamanSaatIni = 1;
+            renderTabelBuku();
+          })
+          .withFailureHandler(function () {
+            buatBarisStatus(tbody, 4, "Data buku gagal dimuat.", "p-4 text-center text-red-600");
+          })
+          .getBukuData(getAdminToken());
+      }
+
+      function renderTabelBuku() {
+        const tbody = document.getElementById("tabel-body-buku");
+        kosongkanElemen(tbody);
+
+        if (!semuaBukuAdmin.length) {
+          buatBarisStatus(tbody, 4, "Belum ada koleksi buku.");
+          document.getElementById("paginasi-buku").classList.add("hidden");
+          return;
+        }
+
+        const totalPages = Math.max(Math.ceil(semuaBukuAdmin.length / LIMIT_ADMIN), 1);
+        halamanSaatIni = Math.min(Math.max(halamanSaatIni, 1), totalPages);
+        const start = (halamanSaatIni - 1) * LIMIT_ADMIN;
+        const visibleBooks = semuaBukuAdmin.slice(start, start + LIMIT_ADMIN);
+
+        visibleBooks.forEach(function (item) {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+
+          const tdTitle = document.createElement("td");
+          tdTitle.className = "p-3 font-semibold text-sm";
+          tdTitle.textContent = String(item.judul || "");
+
+          const tdCategory = document.createElement("td");
+          tdCategory.className = "p-3 text-sm";
+          tdCategory.textContent = String(item.kategori || "");
+
+          const tdReads = document.createElement("td");
+          tdReads.className = "p-3 text-sm";
+          tdReads.textContent = String(Number(item.dibaca) || 0) + "x";
+
+          const tdActions = document.createElement("td");
+          tdActions.className = "p-3 text-center space-x-2";
+
+          const editButton = document.createElement("button");
+          editButton.className = "text-blue-500 hover:text-blue-700";
+          editButton.title = "Edit";
+          editButton.appendChild(buatIkon("fas fa-edit"));
+          editButton.addEventListener("click", function () {
+            bukaModalEdit(item);
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "text-red-500 hover:text-red-700";
+          deleteButton.title = "Hapus";
+          deleteButton.appendChild(buatIkon("fas fa-trash"));
+          deleteButton.addEventListener("click", function () {
+            hapusBukuUI(String(item.id || ""), String(item.judul || ""));
+          });
+
+          tdActions.appendChild(editButton);
+          tdActions.appendChild(deleteButton);
+          tr.appendChild(tdTitle);
+          tr.appendChild(tdCategory);
+          tr.appendChild(tdReads);
+          tr.appendChild(tdActions);
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("info-halaman-buku").textContent =
+          "Halaman " + halamanSaatIni + " dari " + totalPages;
+        document.getElementById("btn-prev-buku").disabled = halamanSaatIni <= 1;
+        document.getElementById("btn-next-buku").disabled = halamanSaatIni >= totalPages;
+        document.getElementById("paginasi-buku").classList.remove("hidden");
+      }
+
+      function gantiHalamanBuku(direction) {
+        halamanSaatIni += Number(direction) || 0;
+        renderTabelBuku();
+      }
+
+      async function hapusBukuUI(id, title) {
+        const setuju = await tampilkanKonfirmasi('Menghapus "' + title + '" juga memindahkan PDF dan cover ke Trash.', "Hapus Buku", "Hapus Buku", true);
+        if (!setuju) return;
+        const tbody = document.getElementById("tabel-body-buku");
+        buatBarisStatus(tbody, 4, "Sedang menghapus buku dan file...", "p-4 text-center text-red-500", true);
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") alert(response.pesan);
+            muatDataBuku();
+            muatStatistik();
+            muatAktivitas();
+          })
+          .withFailureHandler(function () {
+            alert("Buku gagal dihapus.");
+            muatDataBuku();
+          })
+          .hapusBuku(getAdminToken(), id);
+      }
+
+      function bukaModalEdit(item) {
+        document.getElementById("edit-id-buku").value = String(item.id || "");
+        document.getElementById("edit-judul").value = String(item.judul || "");
+        document.getElementById("edit-pengarang").value = String(item.pengarang || "");
+        document.getElementById("modal-edit-buku").classList.remove("hidden");
+        muatDropdownKategori("edit-kategori", String(item.kategori || ""));
+      }
+
+      function tutupModalEdit() {
+        document.getElementById("modal-edit-buku").classList.add("hidden");
+      }
+
+      function simpanEditBukuUI() {
+        const button = document.getElementById("btn-simpan-edit");
+        setTombolLoading(button, true, "Simpan Perubahan", "Menyimpan...");
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Simpan Perubahan");
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status === "success") {
+              tutupModalEdit();
+              muatDataBuku();
+              muatAktivitas();
+            } else {
+              alert(response.pesan);
+            }
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Simpan Perubahan");
+            alert("Perubahan buku gagal disimpan.");
+          })
+          .editBuku(
+            getAdminToken(),
+            document.getElementById("edit-id-buku").value,
+            document.getElementById("edit-judul").value,
+            document.getElementById("edit-pengarang").value,
+            document.getElementById("edit-kategori").value,
+          );
+      }
+
+      function setNilaiStatistik(id, value, unit) {
+        const element = document.getElementById(id);
+        kosongkanElemen(element);
+        element.appendChild(document.createTextNode(String(value)));
+        if (unit) {
+          const span = document.createElement("span");
+          span.className = "text-sm font-normal text-gray-500";
+          span.textContent = " " + unit;
+          element.appendChild(span);
+        }
+      }
+
+      function muatStatistik() {
+        const ids = [
+          "stat-buku",
+          "stat-kategori",
+          "stat-kunjungan-hari",
+          "stat-kunjungan-bulan",
+          "stat-dibaca",
+          "stat-populer",
+        ];
+        ids.forEach(function (id) {
+          const element = document.getElementById(id);
+          kosongkanElemen(element);
+          element.appendChild(buatIkon("fas fa-spinner fa-spin text-sm"));
+        });
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") {
+              ids.forEach(function (id) {
+                document.getElementById(id).textContent = "Gagal dimuat";
+              });
+              return;
+            }
+            const data = response.data || {};
+            setNilaiStatistik("stat-buku", Number(data.totalBuku) || 0, "Buku");
+            setNilaiStatistik("stat-kategori", Number(data.totalKategori) || 0, "Kategori");
+            setNilaiStatistik("stat-kunjungan-hari", Number(data.kunjunganHariIni) || 0, "Sesi");
+            setNilaiStatistik("stat-kunjungan-bulan", Number(data.kunjunganBulanIni) || 0, "Sesi");
+            setNilaiStatistik("stat-dibaca", Number(data.totalDibaca) || 0, "Kali");
+            document.getElementById("stat-populer").textContent = data.bukuTerpopuler || "Belum ada data";
+          })
+          .withFailureHandler(function () {
+            ids.forEach(function (id) {
+              document.getElementById(id).textContent = "Gagal dimuat";
+            });
+          })
+          .getStatistikData(getAdminToken());
+      }
+
+      function muatDataPesan() {
+        const tbody = document.getElementById("tabel-body-feedback");
+        buatBarisStatus(tbody, 4, "Mengecek pesan...", "p-4 text-center text-gray-500", true);
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") {
+              buatBarisStatus(tbody, 4, response.pesan || "Pesan gagal dimuat.", "p-4 text-center text-red-600");
+              return;
+            }
+
+            const data = response.data || {};
+            const messages = Array.isArray(data.messages) ? data.messages : [];
+            const badge = document.getElementById("badge-notif");
+            const unread = Number(data.unreadCount) || 0;
+            badge.textContent = String(unread);
+            badge.classList.toggle("hidden", unread <= 0);
+            kosongkanElemen(tbody);
+
+            if (!messages.length) {
+              buatBarisStatus(tbody, 4, "Kotak masuk kosong.");
+              return;
+            }
+
+            messages.forEach(function (item) {
+              const tr = document.createElement("tr");
+              tr.className = "border-b " + (item.status === "Belum Dibaca" ? "bg-red-50" : "hover:bg-gray-50");
+
+              const tdDate = document.createElement("td");
+              tdDate.className = "p-3 text-xs text-gray-500";
+              tdDate.textContent = String(item.tanggal || "-");
+
+              const tdName = document.createElement("td");
+              tdName.className = "p-3 font-semibold text-sm";
+              tdName.textContent = String(item.nama || "Anonim");
+
+              const tdMessage = document.createElement("td");
+              tdMessage.className = "p-3 text-gray-700 text-sm max-w-xs whitespace-pre-wrap";
+              tdMessage.textContent = String(item.pesan || "");
+
+              const tdStatus = document.createElement("td");
+              tdStatus.className = "p-3 text-center";
+              if (item.status === "Belum Dibaca") {
+                const button = document.createElement("button");
+                button.className = "bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition";
+                button.appendChild(buatIkon("fas fa-check mr-1"));
+                button.appendChild(document.createTextNode("Tandai Dibaca"));
+                button.addEventListener("click", function () {
+                  tandaiDibacaUI(Number(item.baris));
+                });
+                tdStatus.appendChild(button);
+              } else {
+                const span = document.createElement("span");
+                span.className = "text-xs text-gray-400 font-semibold";
+                span.appendChild(buatIkon("fas fa-check-double mr-1"));
+                span.appendChild(document.createTextNode("Selesai"));
+                tdStatus.appendChild(span);
+              }
+
+              tr.appendChild(tdDate);
+              tr.appendChild(tdName);
+              tr.appendChild(tdMessage);
+              tr.appendChild(tdStatus);
+              tbody.appendChild(tr);
+            });
+          })
+          .withFailureHandler(function () {
+            buatBarisStatus(tbody, 4, "Kritik dan saran gagal dimuat.", "p-4 text-center text-red-600");
+          })
+          .getPesanData(getAdminToken());
+      }
+
+      function tandaiDibacaUI(row) {
+        const tbody = document.getElementById("tabel-body-feedback");
+        buatBarisStatus(tbody, 4, "Memproses...", "p-4 text-center text-gray-500", true);
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") alert(response.pesan);
+            muatDataPesan();
+            muatAktivitas();
+          })
+          .withFailureHandler(function () {
+            alert("Status pesan gagal diperbarui.");
+            muatDataPesan();
+          })
+          .tandaiPesanDibaca(getAdminToken(), row);
+      }
+
+      function muatStatusPemeliharaan() {
+        const lastBackup = document.getElementById("status-backup-terakhir");
+        const weekly = document.getElementById("status-backup-mingguan");
+        const master = document.getElementById("status-master-keamanan");
+        lastBackup.textContent = "Memuat...";
+        weekly.textContent = "Memuat...";
+        master.textContent = "Memuat...";
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") {
+              lastBackup.textContent = response.pesan || "Status gagal dimuat.";
+              return;
+            }
+            const data = response.data || {};
+            lastBackup.textContent = data.lastBackup
+              ? data.lastBackup.timestamp + " oleh " + data.lastBackup.username
+              : "Belum pernah dibuat";
+            weekly.textContent = data.weeklyBackupActive ? "Aktif" : "Belum aktif";
+            master.textContent = data.masterConfigured ? "Sudah dikonfigurasi" : "Belum dikonfigurasi";
+          })
+          .withFailureHandler(function () {
+            lastBackup.textContent = "Status gagal dimuat.";
+          })
+          .getStatusPemeliharaan(getAdminToken());
+      }
+
+      function buatBackupUI() {
+        const button = document.getElementById("btn-backup-sekarang");
+        setTombolLoading(button, true, "Backup Database Cepat", "Membuat backup...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Backup Database Cepat");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Proses backup selesai.");
+            if (response.status === "success") {
+              muatStatusPemeliharaan();
+              muatAktivitas();
+            }
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Backup Database Cepat");
+            alert("Backup gagal dibuat.");
+          })
+          .buatBackupSekarang(getAdminToken());
+      }
+
+
+      let timerStatusPekerjaan = null;
+
+      function setProgressPekerjaan(data) {
+        const statusText = document.getElementById("status-pekerjaan-pemeliharaan");
+        const progress = document.getElementById("progress-pekerjaan");
+        const angka = document.getElementById("angka-progress-pekerjaan");
+        const cancelButton = document.getElementById("btn-batalkan-pekerjaan");
+        if (!data) {
+          statusText.textContent = "Tidak ada pekerjaan aktif.";
+          progress.style.width = "0%";
+          angka.textContent = "0 / 0";
+          cancelButton.classList.add("hidden");
+          return;
+        }
+        const total = Number(data.totalRows) || 0;
+        const processed = Number(data.processed) || 0;
+        const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (data.status === "COMPLETED" ? 100 : 0);
+        statusText.textContent = String(data.message || data.status || "Memproses...");
+        progress.style.width = percent + "%";
+        angka.textContent = processed + " / " + total + " | Berhasil: " + (Number(data.success) || 0) + " | Gagal: " + (Number(data.failed) || 0);
+        cancelButton.classList.toggle("hidden", data.status !== "RUNNING");
+      }
+
+      function muatStatusPekerjaan() {
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            setProgressPekerjaan(response.status === "success" ? response.data : null);
+            const running = response.data && response.data.status === "RUNNING";
+            if (running && !timerStatusPekerjaan) {
+              timerStatusPekerjaan = setInterval(muatStatusPekerjaan, 10000);
+            } else if (!running && timerStatusPekerjaan) {
+              clearInterval(timerStatusPekerjaan);
+              timerStatusPekerjaan = null;
+              muatStatusPemeliharaan();
+              muatDaftarBackupKoleksi();
+              muatAktivitas();
+            }
+          })
+          .withFailureHandler(function () {
+            document.getElementById("status-pekerjaan-pemeliharaan").textContent = "Status pekerjaan gagal dimuat.";
+          })
+          .getStatusPekerjaanPemeliharaan(getAdminToken());
+      }
+
+      function muatDaftarBackupKoleksi() {
+        const select = document.getElementById("restore-backup-set");
+        kosongkanElemen(select);
+        const loading = document.createElement("option");
+        loading.value = "";
+        loading.textContent = "Memuat daftar backup...";
+        select.appendChild(loading);
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            kosongkanElemen(select);
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "-- Pilih paket backup --";
+            select.appendChild(placeholder);
+            const backups = response.status === "success" && Array.isArray(response.data) ? response.data : [];
+            backups.forEach(function (item) {
+              const option = document.createElement("option");
+              option.value = String(item.id || "");
+              option.textContent = String(item.name || "Backup") + " — " + String(item.createdAt || "");
+              select.appendChild(option);
+            });
+            if (!backups.length) placeholder.textContent = "Belum ada Backup Koleksi V3";
+          })
+          .withFailureHandler(function () {
+            kosongkanElemen(select);
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Daftar backup gagal dimuat";
+            select.appendChild(option);
+          })
+          .getDaftarBackupKoleksi(getAdminToken());
+      }
+
+      async function buatBackupKoleksiUI() {
+        const setuju = await tampilkanKonfirmasi("Backup koleksi lengkap akan menyalin seluruh cover dan PDF.", "Backup Koleksi Lengkap", "Mulai Backup", false);
+        if (!setuju) return;
+        const button = document.getElementById("btn-backup-koleksi");
+        setTombolLoading(button, true, "Backup Koleksi Lengkap", "Menyiapkan...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Backup Koleksi Lengkap");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Proses backup dimulai.");
+            if (response.status === "success") muatStatusPekerjaan();
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Backup Koleksi Lengkap");
+            alert("Backup koleksi gagal dimulai.");
+          })
+          .mulaiBackupKoleksiLengkap(getAdminToken());
+      }
+
+      async function mulaiRestoreUI(simulasi) {
+        const folderId = document.getElementById("restore-backup-manual-id").value.trim() || document.getElementById("restore-backup-set").value;
+        const mode = document.getElementById("restore-mode").value;
+        if (!folderId) {
+          alert("Pilih paket Backup Koleksi V3 atau tempel ID/URL folder backup.");
+          return;
+        }
+        if (!simulasi) {
+          const setuju = await tampilkanKonfirmasi("Restore dapat mengubah katalog dan menyalin banyak file. Pastikan sumber backup sudah benar.", "Jalankan Restore", "Mulai Restore", true);
+          if (!setuju) return;
+        }
+        const button = document.getElementById(simulasi ? "btn-simulasi-restore" : "btn-restore");
+        const original = simulasi ? "Simulasi Restore" : "Jalankan Restore";
+        setTombolLoading(button, true, original, "Menyiapkan...");
+        let runner = google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, original);
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Proses dimulai.");
+            if (response.status === "success") muatStatusPekerjaan();
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, original);
+            alert("Proses restore gagal dimulai.");
+          });
+        if (simulasi) runner.mulaiSimulasiPemulihan(getAdminToken(), folderId, mode);
+        else runner.mulaiPemulihanKoleksi(getAdminToken(), folderId, mode);
+      }
+
+      async function mulaiRestoreLegacyUI(simulasi) {
+        const spreadsheetId = document.getElementById("legacy-spreadsheet-id").value.trim();
+        const coverFolderId = document.getElementById("legacy-cover-folder-id").value.trim();
+        const pdfFolderId = document.getElementById("legacy-pdf-folder-id").value.trim();
+        const mode = document.getElementById("restore-mode").value;
+        if (!spreadsheetId || !coverFolderId || !pdfFolderId) {
+          alert("Lengkapi Spreadsheet backup serta folder cover dan PDF.");
+          return;
+        }
+        if (!simulasi) {
+          const setuju = await tampilkanKonfirmasi("Restore legacy hanya memulihkan file yang dapat dicocokkan secara aman. Simulasi terlebih dahulu sangat disarankan.", "Restore Backup Lama", "Lanjutkan", true);
+          if (!setuju) return;
+        }
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Proses dimulai.");
+            if (response.status === "success") muatStatusPekerjaan();
+          })
+          .withFailureHandler(function () { alert("Restore legacy gagal dimulai."); })
+          .mulaiPemulihanLegacy(getAdminToken(), spreadsheetId, coverFolderId, pdfFolderId, mode, simulasi);
+      }
+
+      function mulaiCekIntegritasUI() {
+        const button = document.getElementById("btn-cek-integritas");
+        setTombolLoading(button, true, "Periksa File Aktif", "Menyiapkan...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Periksa File Aktif");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Pemeriksaan dimulai.");
+            if (response.status === "success") muatStatusPekerjaan();
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Periksa File Aktif");
+            alert("Pemeriksaan gagal dimulai.");
+          })
+          .mulaiPemeriksaanIntegritas(getAdminToken());
+      }
+
+      async function batalkanPekerjaanUI() {
+        const setuju = await tampilkanKonfirmasi("Batalkan pekerjaan yang sedang berjalan?", "Batalkan Pekerjaan", "Ya, Batalkan", true);
+        if (!setuju) return;
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Pekerjaan dibatalkan.");
+            muatStatusPekerjaan();
+          })
+          .withFailureHandler(function () { alert("Pekerjaan gagal dibatalkan."); })
+          .batalkanPekerjaanPemeliharaan(getAdminToken());
+      }
+
+      function aktifkanBackupMingguanUI() {
+        const button = document.getElementById("btn-backup-mingguan");
+        setTombolLoading(button, true, "Aktifkan Backup Mingguan", "Mengaktifkan...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Aktifkan Backup Mingguan");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Selesai.");
+            if (response.status === "success") {
+              muatStatusPemeliharaan();
+              muatAktivitas();
+            }
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Aktifkan Backup Mingguan");
+            alert("Backup mingguan gagal diaktifkan.");
+          })
+          .pasangBackupMingguan(getAdminToken());
+      }
+
+      function muatAktivitas() {
+        const tbody = document.getElementById("tabel-body-log-aktivitas");
+        buatBarisStatus(tbody, 5, "Memuat aktivitas...", "p-4 text-center text-gray-500", true);
+        google.script.run
+          .withSuccessHandler(function (response) {
+            if (!periksaResponsAdmin(response)) return;
+            if (response.status !== "success") {
+              buatBarisStatus(tbody, 5, response.pesan || "Log gagal dimuat.", "p-4 text-center text-red-600");
+              return;
+            }
+            const logs = Array.isArray(response.data) ? response.data : [];
+            kosongkanElemen(tbody);
+            if (!logs.length) {
+              buatBarisStatus(tbody, 5, "Belum ada aktivitas.");
+              return;
+            }
+
+            logs.forEach(function (log) {
+              const tr = document.createElement("tr");
+              tr.className = "border-b hover:bg-gray-50";
+              [
+                { value: log.timestamp, className: "p-2 text-xs text-gray-500 whitespace-nowrap" },
+                { value: log.username, className: "p-2 text-xs font-semibold" },
+                { value: log.aksi, className: "p-2 text-xs" },
+                { value: log.target, className: "p-2 text-xs" },
+                { value: log.status, className: "p-2 text-xs font-semibold" },
+              ].forEach(function (cell) {
+                const td = document.createElement("td");
+                td.className = cell.className;
+                td.textContent = String(cell.value || "-");
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+          })
+          .withFailureHandler(function () {
+            buatBarisStatus(tbody, 5, "Log aktivitas gagal dimuat.", "p-4 text-center text-red-600");
+          })
+          .getAktivitasTerbaru(getAdminToken(), 20);
+      }
+
+      function ubahPasswordUI() {
+        const oldPassword = document.getElementById("password-lama-admin").value;
+        const newPassword = document.getElementById("password-baru-admin").value;
+        const confirmation = document.getElementById("konfirmasi-password-admin").value;
+        const button = document.getElementById("btn-ubah-password");
+
+        if (newPassword !== confirmation) {
+          alert("Konfirmasi password baru tidak sama.");
+          return;
+        }
+
+        setTombolLoading(button, true, "Ubah Password", "Memperbarui...");
+        google.script.run
+          .withSuccessHandler(function (response) {
+            setTombolLoading(button, false, "Ubah Password");
+            if (!periksaResponsAdmin(response)) return;
+            alert(response.pesan || "Selesai.");
+            if (response.status === "success" && response.harusLoginUlang) {
+              kembaliKeLogin();
+            }
+          })
+          .withFailureHandler(function () {
+            setTombolLoading(button, false, "Ubah Password");
+            alert("Password gagal diperbarui.");
+          })
+          .ubahPasswordAdmin(getAdminToken(), oldPassword, newPassword);
+      }
+
+      document.addEventListener("DOMContentLoaded", verifikasiSesiSaatMuat);
+    </script>
+
+  </body>
+</html>

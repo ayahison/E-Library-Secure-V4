@@ -1,0 +1,14 @@
+E-LIBRARY SECURE V4 — NETLIFY PUBLIC FRONTEND
+
+1. Frontend publik dipindahkan ke folder public untuk hosting Netlify/custom domain.
+2. Seluruh google.script.run pada frontend publik diganti fetch same-origin ke /api/elibrary.
+3. Satu action bootstrap memuat pengaturan, kategori, katalog, dan URL admin sekaligus.
+4. Netlify Function menjadi gateway server-side menuju Apps Script.
+5. Request Netlify → GAS ditandatangani HMAC-SHA256.
+6. GAS memvalidasi timestamp, nonce sekali pakai, client fingerprint, signature, dan rate limit.
+7. URL dan shared secret backend tidak disimpan pada JavaScript browser.
+8. Ditambahkan honeypot pada kritik dan saran.
+9. Panel Admin tetap di Apps Script; upload, backup, restore, dan autentikasi admin tidak diubah.
+10. Tombol kembali pada panel admin menuju PUBLIC_FRONTEND_URL.
+11. URL Apps Script publik mengarahkan ke PUBLIC_FRONTEND_URL.
+12. Ditambahkan cekKonfigurasiNetlify dan wrapper setupKeamananAwal tanpa underscore.

@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Library | Perpustakaan Digital</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome untuk Icon -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      /* TEMA BANYUMAS (Bisa diubah via panel admin nantinya) */
+      :root {
+        --color-primary: #006633; /* Hijau Khas */
+        --color-accent: #ffd700; /* Kuning Emas */
+        --color-bg: #f3f4f6;
+      }
+      body {
+        background-color: var(--color-bg);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding-bottom: 70px; /* Ruang untuk bottom nav di mobile */
+      }
+      .bg-primary {
+        background-color: var(--color-primary);
+      }
+      .text-primary {
+        color: var(--color-primary);
+      }
+      .border-primary {
+        border-color: var(--color-primary);
+      }
+      .bg-accent {
+        background-color: var(--color-accent);
+      }
+
+      /* Sembunyikan scrollbar untuk kategori tapi tetap bisa di-scroll */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+
+      /* Popup notifikasi ringan tanpa library tambahan */
+      .app-popup-backdrop {
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+      }
+      .app-popup-card {
+        animation: appPopupIn 0.18s ease-out;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+      }
+      .app-popup-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+      .app-popup-success { background: #dcfce7; color: #15803d; }
+      .app-popup-error { background: #fee2e2; color: #b91c1c; }
+      .app-popup-warning { background: #fef3c7; color: #b45309; }
+      .app-popup-info { background: #dbeafe; color: #1d4ed8; }
+      @keyframes appPopupIn {
+        from { opacity: 0; transform: translateY(10px) scale(0.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .app-popup-card { animation: none; }
+      }
+
+    </style>
+  </head>
+  <body>
+    <!-- LAYER LOADING AWAL (SPLASH SCREEN) -->
+    <div
+      id="splash-screen"
+      class="fixed inset-0 bg-white z-[9999] flex flex-col justify-center items-center transition-opacity duration-500"
+    >
+      <i
+        class="fas fa-book-reader text-5xl text-green-700 mb-4 animate-bounce"
+      ></i>
+      <h2 class="text-xl font-bold text-gray-800">Menyiapkan Ruang Baca...</h2>
+      <p class="text-sm text-gray-500 mt-2">Menghubungkan ke E-Library</p>
+    </div>
+
+    <!-- 1. NAVBAR DESKTOP (Tersembunyi di Mobile) -->
+    <nav
+      class="bg-primary text-white p-4 shadow-md hidden md:flex justify-between items-center sticky top-0 z-40"
+    >
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-book-reader text-2xl text-yellow-300"></i>
+        <h1 class="text-xl font-bold" id="nama-perpus-desktop">
+          E-Library Banyumas
+        </h1>
+      </div>
+      <div class="flex-1 max-w-xl mx-8 relative">
+        <input
+          type="text"
+          id="search-desktop"
+          oninput="cariBuku(this.value)"
+          placeholder="Cari judul atau pengarang..."
+          class="w-full py-2 px-4 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        />
+        <button class="absolute right-3 top-2 text-gray-500">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div class="space-x-4">
+        <a href="#" class="hover:text-yellow-300 transition"
+          ><i class="fas fa-home"></i> Beranda</a
+        >
+        <a
+          href="#"
+          class="hover:text-yellow-300 transition"
+          onclick="bukaModalAdmin()"
+          ><i class="fas fa-cog"></i> Admin</a
+        >
+      </div>
+    </nav>
+
+    <!-- 2. HEADER MOBILE (Tampil hanya di Mobile) -->
+    <div
+      class="bg-primary text-white p-4 shadow-md md:hidden flex justify-between items-center sticky top-0 z-40"
+    >
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-book-reader text-yellow-300 text-xl"></i>
+        <h1 class="text-lg font-bold" id="nama-perpus-mobile">E-Library</h1>
+      </div>
+    </div>
+
+    <!-- 3. KONTEN UTAMA -->
+    <main class="container mx-auto p-4 mt-4">
+      <!-- Kolom Pencarian Khusus Mobile -->
+      <div class="md:hidden mb-6 relative">
+        <input
+          type="text"
+          id="search-mobile"
+          oninput="cariBuku(this.value)"
+          placeholder="Cari judul buku atau pengarang..."
+          class="w-full py-3 px-4 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+        />
+        <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
+      </div>
+      <!-- Kategori Slider -->
+
+      <h2 class="text-lg font-bold mb-3 text-gray-800">Kategori Pilihan</h2>
+      <div
+        id="kategori-slider"
+        class="flex overflow-x-auto space-x-3 no-scrollbar pb-2 mb-6"
+      >
+        <!-- Tombol akan digenerate via Javascript -->
+      </div>
+
+      <!-- Grid List Buku -->
+      <h2 class="text-lg font-bold mb-4 text-gray-800">Koleksi Terbaru</h2>
+      <div
+        id="rak-buku"
+        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"
+      >
+        <!-- Isi akan digenerate otomatis -->
+      </div>
+
+      <!-- Tombol load more -->
+
+      <div id="wadah-load-more" class="text-center mt-8 hidden">
+        <button
+          onclick="loadMoreBuku()"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-full text-sm transition"
+        >
+          Tampilkan Lebih Banyak <i class="fas fa-chevron-down ml-1"></i>
+        </button>
+      </div>
+    </main>
+
+    <!-- 4. BOTTOM NAVIGATION MOBILE -->
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex justify-around items-center h-16 z-40"
+    >
+      <a
+        href="#"
+        onclick="event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });"
+        class="flex flex-col items-center text-primary"
+        ><i class="fas fa-home text-lg"></i
+        ><span class="text-[10px] mt-1 font-bold">Beranda</span></a
+      >
+
+      <a
+        href="#"
+        onclick="
+          event.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(function () {
+            document.getElementById('search-mobile').focus();
+          }, 300);
+        "
+        class="flex flex-col items-center text-gray-500"
+        ><i class="fas fa-search text-lg"></i
+        ><span class="text-[10px] mt-1">Cari</span></a
+      >
+
+      <a
+        href="#"
+        onclick="
+          event.preventDefault();
+          document
+            .getElementById('kategori-slider')
+            .scrollIntoView({ behavior: 'smooth', block: 'center' });
+        "
+        class="flex flex-col items-center text-gray-500"
+        ><i class="fas fa-th-large text-lg"></i
+        ><span class="text-[10px] mt-1">Kategori</span></a
+      >
+    </div>
+
+    <!-- Tombol mengakhiri penggunaan pada PC/perangkat bersama -->
+    <button
+      id="btn-selesai-sesi"
+      onclick="akhiriSesiKunjungan()"
+      class="hidden fixed bottom-20 md:bottom-8 left-4 md:left-8 bg-red-600 text-white px-4 py-2 rounded-lg shadow-xl text-sm font-bold hover:bg-red-700 transition z-40"
+      title="Akhiri sesi agar siap digunakan pemustaka berikutnya"
+    >
+      <i class="fas fa-sign-out-alt mr-1"></i> Selesai Membaca
+    </button>
+
+    <!-- 5. FLOATING BUTTON KRITIK & SARAN -->
+    <button
+      onclick="bukaModalFeedback()"
+      class="fixed bottom-20 md:bottom-8 right-4 md:right-8 bg-yellow-400 text-primary w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl hover:scale-110 transition z-40"
+    >
+      <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <!-- 6. FOOTER RESMI -->
+    <footer class="mt-8 mb-16 md:mb-0 text-center text-xs text-gray-500 p-4">
+      <p id="footer-nama">&copy; 2026 E-Library Terpadu.</p>
+      <p class="font-semibold text-primary mt-1">
+        Dikembangkan dengan bangga oleh Dinas Arsip dan Perpustakaan Daerah
+        Kabupaten Banyumas
+      </p>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- KUMPULAN MODAL (POP-UP) -->
+    <!-- ========================================== -->
+
+    <!-- Modal Welcome ringan tanpa QR Code -->
+    <div
+      id="modal-welcome"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden text-center"
+      >
+        <div class="bg-primary p-4 text-white">
+          <i class="fas fa-book-open text-3xl text-yellow-300 mb-2"></i>
+          <h2 class="text-xl font-bold">Selamat Datang!</h2>
+        </div>
+        <div class="p-6">
+          <p class="text-sm text-gray-600 mb-6" id="teks-sambutan">
+            Mari jelajahi jendela dunia melalui koleksi digital kami.
+          </p>
+          <button
+            onclick="mulaiSesiKunjungan()"
+            class="w-full bg-accent text-primary font-bold py-2 rounded-lg hover:bg-yellow-500 transition"
+          >
+            Mulai Membaca
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Kritik & Saran -->
+    <div
+      id="modal-feedback"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden relative"
+      >
+        <button
+          onclick="tutupModal('modal-feedback')"
+          class="absolute top-3 right-4 text-gray-400 hover:text-red-500 text-xl"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="p-6">
+          <div class="text-center mb-4">
+            <div
+              class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2"
+            >
+              <i class="fas fa-smile-beam text-3xl text-primary"></i>
+            </div>
+            <h2 class="text-lg font-bold text-gray-800">
+              Kami Siap Mendengar!
+            </h2>
+            <p class="text-xs text-gray-500">
+              Punya masukan atau usulan buku baru? Beritahu Kami di sini.
+            </p>
+          </div>
+          <form
+            onsubmit="
+              event.preventDefault();
+              kirimPesanUI();
+            "
+          >
+            <input
+              type="text"
+              id="silima-nama"
+              placeholder="Nama Anda (Boleh Kosong)"
+              class="w-full p-2 mb-3 border border-gray-300 rounded-md text-sm"
+            />
+            <textarea
+              id="silima-pesan"
+              placeholder="Tulis kritik, saran, atau usulan buku..."
+              rows="4"
+              class="w-full p-2 mb-3 border border-gray-300 rounded-md text-sm"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              id="btn-kirim-silima"
+              class="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              Kirim Pesan
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Modal PDF Viewer Layar Penuh -->
+    <div
+      id="modal-pdf"
+      class="fixed inset-0 bg-black bg-opacity-95 hidden z-50 flex flex-col"
+    >
+      <div
+        class="flex justify-between items-center p-3 bg-gray-900 text-white shadow-md"
+      >
+        <div class="flex items-center space-x-3">
+          <button
+            onclick="tutupModal('modal-pdf')"
+            class="text-gray-300 hover:text-white px-2 text-xl"
+          >
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h3
+            id="pdf-judul"
+            class="font-bold text-sm md:text-base truncate max-w-xs md:max-w-md"
+          >
+            Memuat buku...
+          </h3>
+        </div>
+        <button
+          onclick="tutupModal('modal-pdf')"
+          class="bg-red-600 px-3 py-1 rounded text-xs font-bold hover:bg-red-700"
+        >
+          Tutup (X)
+        </button>
+      </div>
+      <!-- Frame penampil PDF -->
+      <iframe
+        id="pdf-frame"
+        class="w-full flex-1 bg-white border-0"
+        src=""
+      ></iframe>
+    </div>
+
+    <!-- Script Dasar UI -->
+    <script>
+      "use strict";
+
+
+      let appPopupState = null;
+
+      function deteksiTipePopup(pesan) {
+        const text = String(pesan || "").toLowerCase();
+        if (/gagal|salah|tidak dapat|tidak valid|tidak tersedia|ditolak|error|melebihi|wajib diisi|tidak boleh kosong/.test(text)) {
+          return "error";
+        }
+        if (/berhasil|selesai|dimulai|diperbarui|ditambahkan|dihapus|diaktifkan|dibatalkan|terkirim|tersimpan/.test(text)) {
+          return "success";
+        }
+        if (/peringatan|pastikan|perhatian|wajib|pilih|lengkapi/.test(text)) {
+          return "warning";
+        }
+        return "info";
+      }
+
+      function konfigurasiPopup(tipe) {
+        const configs = {
+          success: {
+            title: "Berhasil",
+            icon: "fas fa-check",
+            iconClass: "app-popup-success",
+            buttonClass: "bg-green-600 hover:bg-green-700",
+          },
+          error: {
+            title: "Terjadi Kendala",
+            icon: "fas fa-exclamation-triangle",
+            iconClass: "app-popup-error",
+            buttonClass: "bg-red-600 hover:bg-red-700",
+          },
+          warning: {
+            title: "Perhatian",
+            icon: "fas fa-exclamation",
+            iconClass: "app-popup-warning",
+            buttonClass: "bg-amber-600 hover:bg-amber-700",
+          },
+          info: {
+            title: "Informasi",
+            icon: "fas fa-info",
+            iconClass: "app-popup-info",
+            buttonClass: "bg-blue-600 hover:bg-blue-700",
+          },
+        };
+        return configs[tipe] || configs.info;
+      }
+
+      function pastikanPopupTersedia() {
+        let overlay = document.getElementById("app-popup-overlay");
+        if (overlay) return overlay;
+
+        overlay = document.createElement("div");
+        overlay.id = "app-popup-overlay";
+        overlay.className =
+          "app-popup-backdrop fixed inset-0 z-[10000] hidden items-center justify-center p-4";
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-labelledby", "app-popup-title");
+        overlay.setAttribute("aria-describedby", "app-popup-message");
+
+        const card = document.createElement("div");
+        card.className =
+          "app-popup-card w-full max-w-sm rounded-2xl bg-white p-6 text-center";
+
+        const icon = document.createElement("div");
+        icon.id = "app-popup-icon";
+        icon.className = "app-popup-icon mx-auto mb-4";
+        const iconElement = document.createElement("i");
+        iconElement.id = "app-popup-icon-element";
+        icon.appendChild(iconElement);
+
+        const title = document.createElement("h3");
+        title.id = "app-popup-title";
+        title.className = "text-xl font-bold text-gray-900";
+
+        const message = document.createElement("p");
+        message.id = "app-popup-message";
+        message.className = "mt-2 whitespace-pre-line text-sm leading-6 text-gray-600";
+
+        const actions = document.createElement("div");
+        actions.className = "mt-6 flex justify-center gap-3";
+
+        const cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.id = "app-popup-cancel";
+        cancelButton.className =
+          "hidden rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50";
+        cancelButton.textContent = "Batal";
+        cancelButton.addEventListener("click", function () {
+          tutupPopupAplikasi(false);
+        });
+
+        const confirmButton = document.createElement("button");
+        confirmButton.type = "button";
+        confirmButton.id = "app-popup-confirm";
+        confirmButton.className =
+          "rounded-lg px-5 py-2 text-sm font-bold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2";
+        confirmButton.textContent = "Tutup";
+        confirmButton.addEventListener("click", function () {
+          tutupPopupAplikasi(true);
+        });
+
+        actions.appendChild(cancelButton);
+        actions.appendChild(confirmButton);
+        card.appendChild(icon);
+        card.appendChild(title);
+        card.appendChild(message);
+        card.appendChild(actions);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener("click", function (event) {
+          if (event.target === overlay && appPopupState && !appPopupState.confirmation) {
+            tutupPopupAplikasi(true);
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key !== "Escape" || !appPopupState) return;
+          tutupPopupAplikasi(appPopupState.confirmation ? false : true);
+        });
+
+        return overlay;
+      }
+
+      function tutupPopupAplikasi(result) {
+        const overlay = document.getElementById("app-popup-overlay");
+        if (appPopupState && appPopupState.timer) {
+          clearTimeout(appPopupState.timer);
+        }
+        const resolve = appPopupState && appPopupState.resolve;
+        appPopupState = null;
+        if (overlay) {
+          overlay.classList.add("hidden");
+          overlay.classList.remove("flex");
+        }
+        if (typeof resolve === "function") resolve(Boolean(result));
+      }
+
+      function tampilkanPopupAplikasi(pesan, options) {
+        const opts = options || {};
+        const tipe = opts.type || deteksiTipePopup(pesan);
+        const config = konfigurasiPopup(tipe);
+        const overlay = pastikanPopupTersedia();
+
+        if (appPopupState) tutupPopupAplikasi(false);
+
+        const icon = document.getElementById("app-popup-icon");
+        const iconElement = document.getElementById("app-popup-icon-element");
+        const title = document.getElementById("app-popup-title");
+        const message = document.getElementById("app-popup-message");
+        const cancelButton = document.getElementById("app-popup-cancel");
+        const confirmButton = document.getElementById("app-popup-confirm");
+
+        icon.className = "app-popup-icon mx-auto mb-4 " + config.iconClass;
+        iconElement.className = config.icon;
+        title.textContent = opts.title || config.title;
+        message.textContent = String(pesan || "");
+
+        const confirmation = Boolean(opts.confirmation);
+        cancelButton.classList.toggle("hidden", !confirmation);
+        cancelButton.textContent = opts.cancelText || "Batal";
+        confirmButton.textContent = opts.confirmText || (confirmation ? "Lanjutkan" : "Tutup");
+        confirmButton.className =
+          "rounded-lg px-5 py-2 text-sm font-bold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 " +
+          (confirmation && opts.danger
+            ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            : config.buttonClass + " focus:ring-gray-400");
+
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+
+        return new Promise(function (resolve) {
+          appPopupState = {
+            resolve: resolve,
+            confirmation: confirmation,
+            timer: null,
+          };
+
+          const autoClose = Number(opts.autoClose || 0);
+          if (!confirmation && autoClose > 0) {
+            appPopupState.timer = setTimeout(function () {
+              tutupPopupAplikasi(true);
+            }, autoClose);
+          }
+
+          setTimeout(function () {
+            confirmButton.focus();
+          }, 20);
+        });
+      }
+
+      function tampilkanNotifikasi(pesan, tipe, judul) {
+        const resolvedType = tipe || deteksiTipePopup(pesan);
+        const autoClose = resolvedType === "success" ? 2200 : 0;
+        return tampilkanPopupAplikasi(pesan, {
+          type: resolvedType,
+          title: judul,
+          autoClose: autoClose,
+        });
+      }
+
+      function tampilkanKonfirmasi(pesan, judul, confirmText, danger) {
+        return tampilkanPopupAplikasi(pesan, {
+          type: danger ? "warning" : "info",
+          title: judul || "Konfirmasi",
+          confirmation: true,
+          confirmText: confirmText || "Lanjutkan",
+          cancelText: "Batal",
+          danger: Boolean(danger),
+        });
+      }
+
+      // Semua alert lama otomatis memakai popup profesional ini.
+      window.alert = function (pesan) {
+        tampilkanNotifikasi(String(pesan || ""));
+      };
+
+
+      const BATAS_DIAM_MENIT = 15;
+      const BATAS_DIAM_MS = BATAS_DIAM_MENIT * 60 * 1000;
+      const KUNCI_TOKEN_SESI = "elibrary_token_sesi";
+      const KUNCI_AKTIVITAS_TERAKHIR = "elibrary_aktivitas_terakhir";
+      const LIMIT = 12;
+      let timerSesiKunjungan = null;
+      let semuaBuku = [];
+      let bukuTersaring = [];
+      let itemTampil = 0;
+      let temaAktif = "default";
+
+      const FALLBACK_COVER =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect width="300" height="400" fill="#e5e7eb"/><path d="M95 85h110v230H95z" fill="#ffffff" stroke="#9ca3af" stroke-width="5"/><path d="M115 125h70M115 155h70M115 185h50" stroke="#9ca3af" stroke-width="8" stroke-linecap="round"/><text x="150" y="260" text-anchor="middle" font-family="Arial" font-size="20" fill="#6b7280">Tanpa Cover</text></svg>',
+        );
+
+      function kosongkanElemen(elemen) {
+        while (elemen && elemen.firstChild) elemen.removeChild(elemen.firstChild);
+      }
+
+      function buatIkon(className) {
+        const icon = document.createElement("i");
+        icon.className = className;
+        return icon;
+      }
+
+      function tampilkanPesanRak(text, className, spinner) {
+        const rak = document.getElementById("rak-buku");
+        kosongkanElemen(rak);
+        const box = document.createElement("div");
+        box.className =
+          className ||
+          "col-span-2 md:col-span-4 lg:col-span-5 text-center py-10 text-gray-500";
+        if (spinner) {
+          box.appendChild(buatIkon("fas fa-spinner fa-spin text-2xl mb-2"));
+          box.appendChild(document.createElement("br"));
+        }
+        const paragraph = document.createElement("p");
+        paragraph.textContent = text;
+        box.appendChild(paragraph);
+        rak.appendChild(box);
+      }
+
+      function buatTokenSesi() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return window.crypto.randomUUID().replace(/-/g, "");
+        }
+        return (
+          Date.now().toString(36) +
+          Math.random().toString(36).substring(2) +
+          Math.random().toString(36).substring(2)
+        ).replace(/[^A-Za-z0-9]/g, "");
+      }
+
+      function urlGoogleAman(url, type) {
+        try {
+          const parsed = new URL(String(url || ""));
+          if (parsed.protocol !== "https:") return "";
+          const host = parsed.hostname.toLowerCase();
+          if (type === "pdf") {
+            return host === "drive.google.com" ? parsed.href : "";
+          }
+          if (
+            host === "drive.google.com" ||
+            host.endsWith(".googleusercontent.com")
+          ) {
+            return parsed.href;
+          }
+          return "";
+        } catch (error) {
+          return "";
+        }
+      }
+
+      function tampilkanTombolSelesai(show) {
+        const button = document.getElementById("btn-selesai-sesi");
+        if (button) button.classList.toggle("hidden", !show);
+      }
+
+      function mulaiSesiKunjungan() {
+        const button = document.querySelector(
+          '#modal-welcome button[onclick="mulaiSesiKunjungan()"]',
+        );
+        if (button) {
+          button.disabled = true;
+          kosongkanElemen(button);
+          button.appendChild(buatIkon("fas fa-spinner fa-spin mr-1"));
+          button.appendChild(document.createTextNode("Memulai..."));
+        }
+
+        const token = buatTokenSesi();
+        sessionStorage.setItem(KUNCI_TOKEN_SESI, token);
+        sessionStorage.setItem(KUNCI_AKTIVITAS_TERAKHIR, String(Date.now()));
+
+        function lanjutkan() {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Mulai Membaca";
+          }
+          tutupModal("modal-welcome");
+          tampilkanTombolSelesai(true);
+          mulaiPemantauanSesi();
+        }
+
+        google.script.run
+          .withSuccessHandler(lanjutkan)
+          .withFailureHandler(function (error) {
+            console.warn("Statistik kunjungan gagal:", error);
+            lanjutkan();
+          })
+          .catatSesiKunjungan(token);
+      }
+
+      function perbaruiAktivitasSesi() {
+        if (!sessionStorage.getItem(KUNCI_TOKEN_SESI)) return;
+        sessionStorage.setItem(KUNCI_AKTIVITAS_TERAKHIR, String(Date.now()));
+      }
+
+      function mulaiPemantauanSesi() {
+        if (timerSesiKunjungan) clearInterval(timerSesiKunjungan);
+        timerSesiKunjungan = setInterval(function () {
+          const lastActivity = Number(
+            sessionStorage.getItem(KUNCI_AKTIVITAS_TERAKHIR),
+          );
+          if (lastActivity && Date.now() - lastActivity >= BATAS_DIAM_MS) {
+            akhiriSesiKunjungan();
+          }
+        }, 30000);
+      }
+
+      function bersihkanTampilanUntukPenggunaBerikutnya() {
+        ["search-desktop", "search-mobile"].forEach(function (id) {
+          const input = document.getElementById(id);
+          if (input) input.value = "";
+        });
+
+        tutupModal("modal-pdf");
+        tutupModal("modal-feedback");
+        document.getElementById("silima-nama").value = "";
+        document.getElementById("silima-pesan").value = "";
+        renderBuku(semuaBuku, true);
+        aktifkanTombolKategoriSemua();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function akhiriSesiKunjungan() {
+        sessionStorage.removeItem(KUNCI_TOKEN_SESI);
+        sessionStorage.removeItem(KUNCI_AKTIVITAS_TERAKHIR);
+        if (timerSesiKunjungan) {
+          clearInterval(timerSesiKunjungan);
+          timerSesiKunjungan = null;
+        }
+        tampilkanTombolSelesai(false);
+        bersihkanTampilanUntukPenggunaBerikutnya();
+        document.getElementById("modal-welcome").classList.remove("hidden");
+      }
+
+      function periksaSesiSaatHalamanDibuka() {
+        const token = sessionStorage.getItem(KUNCI_TOKEN_SESI);
+        const lastActivity = Number(
+          sessionStorage.getItem(KUNCI_AKTIVITAS_TERAKHIR),
+        );
+        const active =
+          token &&
+          lastActivity &&
+          Date.now() - lastActivity < BATAS_DIAM_MS;
+
+        if (active) {
+          document.getElementById("modal-welcome").classList.add("hidden");
+          tampilkanTombolSelesai(true);
+          mulaiPemantauanSesi();
+        } else {
+          sessionStorage.removeItem(KUNCI_TOKEN_SESI);
+          sessionStorage.removeItem(KUNCI_AKTIVITAS_TERAKHIR);
+          tampilkanTombolSelesai(false);
+          document.getElementById("modal-welcome").classList.remove("hidden");
+        }
+      }
+
+      ["click", "keydown", "scroll", "touchstart"].forEach(function (eventName) {
+        document.addEventListener(eventName, perbaruiAktivitasSesi, {
+          passive: true,
+        });
+      });
+
+      function tutupModal(idModal) {
+        const modal = document.getElementById(idModal);
+        if (modal) modal.classList.add("hidden");
+        if (idModal === "modal-pdf") {
+          document.getElementById("pdf-frame").src = "";
+        }
+      }
+
+      function bukaModalFeedback() {
+        document.getElementById("modal-feedback").classList.remove("hidden");
+      }
+
+      function bukaModalAdmin() {
+        document.body.style.cursor = "wait";
+        google.script.run
+          .withSuccessHandler(function (url) {
+            window.top.location.href = url + "?page=Admin";
+          })
+          .withFailureHandler(function () {
+            document.body.style.cursor = "default";
+            alert("Panel admin tidak dapat dibuka.");
+          })
+          .getScriptUrl();
+      }
+
+      function terapkanTema(theme) {
+        temaAktif = ["default", "light", "dark"].indexOf(theme) >= 0
+          ? theme
+          : "default";
+
+        if (temaAktif === "light") {
+          document.documentElement.style.setProperty("--color-primary", "#1e3a8a");
+          document.documentElement.style.setProperty("--color-accent", "#60a5fa");
+          document.documentElement.style.setProperty("--color-bg", "#ffffff");
+        } else if (temaAktif === "dark") {
+          document.documentElement.style.setProperty("--color-primary", "#1f2937");
+          document.documentElement.style.setProperty("--color-accent", "#f59e0b");
+          document.documentElement.style.setProperty("--color-bg", "#111827");
+          document.body.classList.add("text-gray-200");
+        }
+      }
+
+      function terapkanPengaturan(data) {
+        const settings = data || {};
+        const name = String(settings.Nama_Perpus || "Perpustakaan Digital");
+        document.getElementById("nama-perpus-desktop").textContent = name;
+        document.getElementById("nama-perpus-mobile").textContent = name;
+        document.getElementById("teks-sambutan").textContent =
+          String(settings.Teks_Sambutan || "Selamat datang.");
+        document.getElementById("footer-nama").textContent =
+          "© 2026 " + name + ".";
+        terapkanTema(String(settings.Tema_Warna || "default"));
+      }
+
+      function selesaiSplash() {
+        const splash = document.getElementById("splash-screen");
+        splash.style.opacity = "0";
+        setTimeout(function () {
+          splash.classList.add("hidden");
+          periksaSesiSaatHalamanDibuka();
+        }, 500);
+      }
+
+      function muatPengaturan() {
+        google.script.run
+          .withSuccessHandler(function (data) {
+            terapkanPengaturan(data);
+            selesaiSplash();
+          })
+          .withFailureHandler(function () {
+            selesaiSplash();
+          })
+          .getPengaturanData();
+      }
+
+      function buatTombolKategori(name, active) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className =
+          "btn-kat bg-white px-4 py-2 rounded-full shadow text-sm whitespace-nowrap " +
+          (active
+            ? "font-semibold text-primary border border-primary"
+            : "font-medium text-gray-600");
+        button.textContent = name;
+        button.dataset.category = name;
+        button.addEventListener("click", function () {
+          filterKategori(name, button);
+        });
+        return button;
+      }
+
+      function renderKategori(categories) {
+        const slider = document.getElementById("kategori-slider");
+        kosongkanElemen(slider);
+        slider.appendChild(buatTombolKategori("Semua", true));
+        (Array.isArray(categories) ? categories : []).forEach(function (item) {
+          const name = String(item.nama || "").trim();
+          if (name) slider.appendChild(buatTombolKategori(name, false));
+        });
+      }
+
+      function muatKategoriDanBuku() {
+        google.script.run
+          .withSuccessHandler(renderKategori)
+          .withFailureHandler(function () {
+            const slider = document.getElementById("kategori-slider");
+            kosongkanElemen(slider);
+            const message = document.createElement("span");
+            message.className = "text-sm text-red-500";
+            message.textContent = "Kategori gagal dimuat.";
+            slider.appendChild(message);
+          })
+          .getKategoriData();
+
+        tampilkanPesanRak("Menyusun rak buku...", undefined, true);
+        google.script.run
+          .withSuccessHandler(function (books) {
+            semuaBuku = Array.isArray(books) ? books : [];
+            renderBuku(semuaBuku, true);
+          })
+          .withFailureHandler(function () {
+            tampilkanPesanRak(
+              "Koleksi gagal dimuat. Silakan muat ulang halaman.",
+              "col-span-2 md:col-span-4 lg:col-span-5 text-center py-10 text-red-500",
+              false,
+            );
+          })
+          .getKatalogPublik();
+      }
+
+      function buatKartuBuku(item) {
+        const card = document.createElement("article");
+        card.className =
+          (temaAktif === "dark" ? "bg-gray-800" : "bg-white") +
+          " rounded-lg shadow hover:shadow-lg transition overflow-hidden flex flex-col h-full fade-in";
+
+        const coverBox = document.createElement("div");
+        coverBox.className = "h-48 bg-gray-200 w-full relative";
+        const image = document.createElement("img");
+        image.src = urlGoogleAman(item.cover, "cover") || FALLBACK_COVER;
+        image.alt = "Cover " + String(item.judul || "buku");
+        image.className = "w-full h-full object-cover";
+        image.loading = "lazy";
+        image.referrerPolicy = "no-referrer";
+        image.addEventListener("error", function () {
+          image.src = FALLBACK_COVER;
+        });
+
+        const category = document.createElement("span");
+        category.className =
+          "absolute top-2 right-2 bg-yellow-400 text-xs font-bold px-2 py-1 rounded text-gray-800 shadow";
+        category.textContent = String(item.kategori || "Tanpa Kategori");
+        coverBox.appendChild(image);
+        coverBox.appendChild(category);
+
+        const content = document.createElement("div");
+        content.className = "p-3 flex-1 flex flex-col justify-between";
+        const textBox = document.createElement("div");
+        const author = document.createElement("p");
+        author.className = "text-xs text-gray-500 mb-1";
+        author.textContent = String(item.pengarang || "-");
+        const title = document.createElement("h3");
+        title.className = "text-sm font-bold leading-tight";
+        title.style.color = "var(--color-primary)";
+        title.textContent = String(item.judul || "Tanpa Judul");
+        textBox.appendChild(author);
+        textBox.appendChild(title);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className =
+          "w-full mt-3 bg-primary text-white text-xs py-2 rounded-md transition hover:opacity-90";
+        button.appendChild(buatIkon("fas fa-book-reader mr-1"));
+        const pdfUrl = urlGoogleAman(item.pdf, "pdf");
+        if (pdfUrl) {
+          button.appendChild(document.createTextNode("Baca"));
+          button.addEventListener("click", function () {
+            bukaPdf(String(item.id || ""), String(item.judul || ""), pdfUrl);
+          });
+        } else {
+          button.disabled = true;
+          button.classList.add("opacity-50", "cursor-not-allowed");
+          button.appendChild(document.createTextNode("File Tidak Tersedia"));
+        }
+
+        content.appendChild(textBox);
+        content.appendChild(button);
+        card.appendChild(coverBox);
+        card.appendChild(content);
+        return card;
+      }
+
+      function renderBuku(data, reset) {
+        const rak = document.getElementById("rak-buku");
+        const loadMoreBox = document.getElementById("wadah-load-more");
+        const shouldReset = reset !== false;
+
+        if (shouldReset) {
+          kosongkanElemen(rak);
+          itemTampil = 0;
+          bukuTersaring = Array.isArray(data) ? data : [];
+        }
+
+        if (!bukuTersaring.length) {
+          tampilkanPesanRak("Belum ada buku yang sesuai.");
+          loadMoreBox.classList.add("hidden");
+          return;
+        }
+
+        const chunk = bukuTersaring.slice(itemTampil, itemTampil + LIMIT);
+        chunk.forEach(function (item) {
+          rak.appendChild(buatKartuBuku(item || {}));
+        });
+        itemTampil += chunk.length;
+        loadMoreBox.classList.toggle("hidden", itemTampil >= bukuTersaring.length);
+      }
+
+      function loadMoreBuku() {
+        renderBuku(bukuTersaring, false);
+      }
+
+      function aktifkanTombolKategoriSemua() {
+        document.querySelectorAll(".btn-kat").forEach(function (button) {
+          const active = button.dataset.category === "Semua";
+          button.classList.toggle("border", active);
+          button.classList.toggle("border-primary", active);
+          button.classList.toggle("text-primary", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("text-gray-600", !active);
+          button.classList.toggle("font-medium", !active);
+        });
+      }
+
+      function filterKategori(category, activeButton) {
+        document.querySelectorAll(".btn-kat").forEach(function (button) {
+          const active = button === activeButton;
+          button.classList.toggle("border", active);
+          button.classList.toggle("border-primary", active);
+          button.classList.toggle("text-primary", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("text-gray-600", !active);
+          button.classList.toggle("font-medium", !active);
+        });
+
+        if (category === "Semua") {
+          renderBuku(semuaBuku, true);
+        } else {
+          renderBuku(
+            semuaBuku.filter(function (book) {
+              return String(book.kategori || "") === category;
+            }),
+            true,
+          );
+        }
+      }
+
+      function bukaPdf(id, title, pdfUrl) {
+        const safePdf = urlGoogleAman(pdfUrl, "pdf");
+        if (!safePdf) {
+          alert("Tautan PDF tidak valid atau tidak tersedia.");
+          return;
+        }
+        document.getElementById("pdf-judul").textContent = title || "Membaca Buku";
+        document.getElementById("pdf-frame").src = safePdf;
+        document.getElementById("modal-pdf").classList.remove("hidden");
+        google.script.run.catatBukuDibaca(String(id || ""));
+      }
+
+      function cariBuku(keywordInput) {
+        const keyword = String(keywordInput || "").toLowerCase().trim();
+        const desktop = document.getElementById("search-desktop");
+        const mobile = document.getElementById("search-mobile");
+        if (desktop && desktop.value !== keywordInput) desktop.value = keywordInput;
+        if (mobile && mobile.value !== keywordInput) mobile.value = keywordInput;
+
+        const result = semuaBuku.filter(function (book) {
+          return (
+            String(book.judul || "").toLowerCase().indexOf(keyword) >= 0 ||
+            String(book.pengarang || "").toLowerCase().indexOf(keyword) >= 0
+          );
+        });
+
+        document.querySelectorAll(".btn-kat").forEach(function (button) {
+          button.classList.remove("border", "border-primary", "text-primary", "font-semibold");
+          button.classList.add("text-gray-600", "font-medium");
+        });
+        renderBuku(result, true);
+      }
+
+      function kirimPesanUI() {
+        const button = document.getElementById("btn-kirim-silima");
+        const name = document.getElementById("silima-nama").value;
+        const message = document.getElementById("silima-pesan").value;
+        if (!message.trim()) {
+          alert("Pesan tidak boleh kosong.");
+          return;
+        }
+
+        button.disabled = true;
+        kosongkanElemen(button);
+        button.appendChild(buatIkon("fas fa-spinner fa-spin mr-1"));
+        button.appendChild(document.createTextNode("Mengirim..."));
+
+        google.script.run
+          .withSuccessHandler(function (response) {
+            button.disabled = false;
+            button.textContent = "Kirim Pesan";
+            alert(response && response.pesan ? response.pesan : "Selesai.");
+            if (response && response.status === "success") {
+              document.getElementById("silima-nama").value = "";
+              document.getElementById("silima-pesan").value = "";
+              tutupModal("modal-feedback");
+            }
+          })
+          .withFailureHandler(function () {
+            button.disabled = false;
+            button.textContent = "Kirim Pesan";
+            alert("Pesan tidak dapat dikirim.");
+          })
+          .kirimPesanSilima(name, message);
+      }
+
+      window.addEventListener("load", function () {
+        muatKategoriDanBuku();
+        muatPengaturan();
+      });
+    </script>
+
+  </body>
+</html>
